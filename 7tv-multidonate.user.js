@@ -2,13 +2,13 @@
 // @author       ProCto_Fliy
 // @name         Legion chat extentions (7TV, более удобный чат и тд)
 // @namespace    https://play.multidonate.ru/
-// @version      4.6.0
+// @version      4.6.1
 // @description  Эмоуты 7TV в чате: кнопка 7TV, ник стримера, размер, список эмоутов, быстрый кеш
 // @match        https://play.multidonate.ru/*
 // @icon         https://cdn.7tv.app/emote/01F71VQYHR000D3ZZ6Q11NR7TV/2x.webp
 // @homepageURL  https://github.com/ko4nev812/Legion7TV
-// @updateURL    https://github.com/ko4nev812/Legion7TV/raw/refs/heads/main/7tv-multidonate.user.js
-// @downloadURL  https://github.com/ko4nev812/Legion7TV/raw/refs/heads/main/7tv-multidonate.user.js
+// @updateURL    https://raw.githubusercontent.com/ko4nev812/Legion7TV/refs/heads/main/7tv-multidonate.user.js
+// @downloadURL  https://raw.githubusercontent.com/ko4nev812/Legion7TV/refs/heads/main/7tv-multidonate.user.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
