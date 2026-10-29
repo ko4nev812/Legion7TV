@@ -3,13 +3,17 @@ import { S, EM, st } from './state.js';
 import { store } from './store.js';
 import { getJson } from './net.js';
 
-function mk(host, flags, isGlobal, isExtra) {
+function mk(host, flags, isGlobal, isExtra, meta = {}) {
     const files = (host.files || []).filter((f) => f.format === 'WEBP').map((f) => f.name);
+    const owner = meta.owner || {};
     return {
         base: 'https:' + host.url,
         f: files.length ? files : ['1x.webp', '2x.webp'],
         zw: !!(flags & 256),   // zero-width эмоут
         g: isGlobal,
+        id: String(meta.id || ''),
+        owner: String(owner.display_name || owner.username || ''),
+        animated: typeof meta.animated === 'boolean' ? meta.animated : null,
         ...(isExtra ? { x: true } : {})
     };
 }
@@ -18,7 +22,11 @@ function addSet(map, set, isGlobal, isExtra) {
     for (const e of (set && set.emotes) || []) {
         const host = e.data && e.data.host;
         if (!host || !host.url || e.name === '__proto__') continue;
-        map[e.name] = mk(host, e.data.flags, isGlobal, isExtra);
+        map[e.name] = mk(host, e.data.flags, isGlobal, isExtra, {
+            id: e.id || e.data.id,
+            owner: e.data.owner,
+            animated: e.data.animated
+        });
     }
 }
 
@@ -27,7 +35,11 @@ function addOne(map, em, alias) {
     const host = em && em.host;
     const name = String(alias || (em && em.name) || '');
     if (!host || !host.url || !name || /\s/.test(name) || name === '__proto__') return false;
-    map[name] = mk(host, em.flags, true, true);
+    map[name] = mk(host, em.flags, true, true, {
+        id: em.id,
+        owner: em.owner,
+        animated: em.animated
+    });
     return true;
 }
 
@@ -74,43 +86,51 @@ export function urlFor(em, n) {
 }
 
 async function loadEmotes(nick, force) {
-    const key = 't7c2:' + nick + ':' + xsig();
+    // Версия ключа меняется вместе со схемой данных: c3 добавляет метаданные для подсказки.
+    const key = 't7c3:' + nick + ':' + xsig();
     if (!force) {
         const c = store.get(key);
         if (c) return { map: c.map, msg: c.msg, stale: Date.now() - c.at >= CACHE_TTL };
     }
-    const map = {};
-    let err = '';
-    try { addSet(map, await getJson('https://7tv.io/v3/emote-sets/global'), true, false); }
-    catch (e) { err = 'глобальные не загрузились'; console.warn('[7TV]', e); }
-
-    let chanMsg = '';
-    if (!nick) {
-        chanMsg = 'укажи ник стримера';
-    } else {
+    // Независимые источники грузятся одновременно. Объединяем в прежнем порядке:
+    // глобальные < канал < свои, чтобы сохранить приоритет одинаковых имён.
+    const globalJob = (async () => {
+        const map = {};
+        try {
+            addSet(map, await getJson('https://7tv.io/v3/emote-sets/global'), true, false);
+            return { map, err: '' };
+        } catch (e) {
+            console.warn('[7TV]', e);
+            return { map, err: 'глобальные не загрузились' };
+        }
+    })();
+    const channelJob = (async () => {
+        const map = {};
+        if (!nick) return { map, msg: 'укажи ник стримера' };
         try {
             const u = await getJson('https://api.ivr.fi/v2/twitch/user?login=' + encodeURIComponent(nick));
             const id = u && u[0] && u[0].id;
-            if (!id) chanMsg = 'Twitch-канал «' + nick + '» не найден';
-            else {
-                const user = await getJson('https://7tv.io/v3/users/twitch/' + id);
-                const set = user && user.emote_set;
-                if (set && set.emotes && set.emotes.length) addSet(map, set, false, false);
-                else chanMsg = 'у канала нет эмоутов 7TV';
+            if (!id) return { map, msg: 'Twitch-канал «' + nick + '» не найден' };
+            const user = await getJson('https://7tv.io/v3/users/twitch/' + id);
+            const set = user && user.emote_set;
+            if (set && set.emotes && set.emotes.length) {
+                addSet(map, set, false, false);
+                return { map, msg: '' };
             }
+            return { map, msg: 'у канала нет эмоутов 7TV' };
         } catch (e) {
-            chanMsg = 'эмоуты канала не загрузились (нет аккаунта 7TV или сервис недоступен)';
             console.warn('[7TV]', e);
+            return { map, msg: 'эмоуты канала не загрузились (нет аккаунта 7TV или сервис недоступен)' };
         }
-    }
-
-    // свои эмоуты - в конце: при совпадении имён побеждают они
-    let bad = 0;
-    if (EXTRA_EMOTES.length || EXTRA_SETS.length) {
-        const ex = await loadExtras();
-        Object.assign(map, ex.map);
-        bad = ex.bad;
-    }
+    })();
+    const extrasJob = EXTRA_EMOTES.length || EXTRA_SETS.length
+        ? loadExtras()
+        : Promise.resolve({ map: {}, bad: 0 });
+    const [global, channel, extras] = await Promise.all([globalJob, channelJob, extrasJob]);
+    const map = Object.assign({}, global.map, channel.map, extras.map);
+    const err = global.err;
+    const chanMsg = channel.msg;
+    const bad = extras.bad;
 
     const names = Object.keys(map);
     const nc = names.filter((n) => !map[n].g).length;

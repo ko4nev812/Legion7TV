@@ -4,6 +4,26 @@
 .t7-zw{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%;width:auto;pointer-events:none}
 .t7-e:not([src]),.t7-zw:not([src]){visibility:hidden}
 
+/* ========== Информация об эмоуте при наведении ========== */
+.t7-tip{
+    position:fixed;z-index:2147483646;display:flex;gap:12px;width:300px;max-width:calc(100vw - 16px);
+    padding:12px;border:1px solid rgba(255,255,255,.18);border-radius:10px;
+    background:#18181b;color:#efeff1;box-shadow:0 8px 28px rgba(0,0,0,.6);
+    font:13px/1.35 system-ui,sans-serif;pointer-events:none;box-sizing:border-box}
+.t7-tip[hidden]{display:none!important}
+.t7-tip-preview{
+    flex:none;display:flex;align-items:center;justify-content:center;width:104px;height:104px;padding:6px;
+    border-radius:8px;background:#0e0e10;box-sizing:border-box}
+.t7-tip-preview img{display:block;max-width:100%;max-height:100%;object-fit:contain}
+.t7-tip-preview img:not([src]),.t7-tip-loading{visibility:hidden}
+.t7-tip-info{min-width:0;display:flex;flex:1;flex-direction:column;justify-content:center;gap:8px}
+.t7-tip-name{font-size:16px;line-height:1.2;overflow-wrap:anywhere}
+.t7-tip-rows{display:flex;flex-direction:column;gap:3px}
+.t7-tip-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;color:#dedee3}
+.t7-tip-row>span:first-child{color:#adadb8}
+.t7-tip-row>span:last-child{overflow-wrap:anywhere}
+.t7-tip-id{font:11px/1.35 ui-monospace,SFMono-Regular,Consolas,monospace}
+
 /* ========== Кнопка 7TV в форме чата ========== */
 form.cy-chat-f .t7-btn{
     flex:none;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;

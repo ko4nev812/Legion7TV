@@ -30,33 +30,88 @@ const DB = (() => {
     };
 })();
 
-// очередь: 8 запросов параллельно, эмоуты из чата (hi) обгоняют картинки окошка (lo)
-const Q = { hi: [], lo: [], run: 0, max: 8 };
+// Приоритеты: 0 — фоновая предзагрузка, 1 — видимая часть пикера, 2 — чат/tooltip.
+// Низкие приоритеты занимают не все слоты, поэтому быстрая прокрутка не ждёт старую очередь.
+const Q = { wait: [], run: 0, running: [0, 0, 0], max: 10, next: 0 };
+const limitFor = (priority) => priority === 0 ? 4 : priority === 1 ? 8 : Q.max;
+
 function pump() {
     while (Q.run < Q.max) {
-        const j = Q.hi.shift() || Q.lo.shift();
-        if (!j) return;
+        let best = -1;
+        for (let i = 0; i < Q.wait.length; i++) {
+            const a = Q.wait[i], b = Q.wait[best];
+            if (best < 0 || a.priority > b.priority || (a.priority === b.priority && a.order < b.order)) best = i;
+        }
+        if (best < 0) return;
+        const j = Q.wait[best];
+        if (Q.run >= limitFor(j.priority)) return;   // оставляем место более срочным запросам
+        Q.wait.splice(best, 1);
+        j.started = true;
         Q.run++;
-        j.fn().then(j.res, j.rej).finally(() => { Q.run--; pump(); });
+        Q.running[j.priority]++;
+        Promise.resolve().then(j.fn).then(j.res, j.rej).finally(() => {
+            Q.run--;
+            Q.running[j.priority]--;
+            pump();
+        });
     }
 }
-const enqueue = (fn, hi) => new Promise((res, rej) => { (hi ? Q.hi : Q.lo).push({ fn, res, rej }); pump(); });
 
-const imgCache = new Map();   // url -> Promise<blob: URL>
+function enqueue(fn, priority) {
+    let job;
+    const promise = new Promise((res, rej) => {
+        job = { fn, res, rej, priority, order: Q.next++, started: false };
+        Q.wait.push(job);
+        pump();
+    });
+    return {
+        promise,
+        promote(nextPriority) {
+            if (!job.started && nextPriority > job.priority) {
+                job.priority = nextPriority;
+                pump();
+            }
+        }
+    };
+}
 
-export function fetchImg(url, hi) {
-    if (imgCache.has(url)) return imgCache.get(url);
-    const p = (async () => {
+const priorityOf = (value) => typeof value === 'number'
+    ? Math.max(0, Math.min(2, Math.round(value)))
+    : value ? 2 : 0;
+
+const imgCache = new Map();   // url -> { promise, promote }
+
+export function fetchImg(url, priority) {
+    const requested = priorityOf(priority);
+    const cached = imgCache.get(url);
+    if (cached) {
+        cached.promote(requested);
+        return cached.promise;
+    }
+
+    let wanted = requested;
+    let queued = null;
+    const record = {
+        promise: null,
+        promote(nextPriority) {
+            wanted = Math.max(wanted, nextPriority);
+            if (queued) queued.promote(wanted);
+        }
+    };
+    record.promise = (async () => {
         let blob = await DB.get(url);
         if (!blob) {
-            blob = await enqueue(() => getBuf(url), hi);
+            queued = enqueue(() => getBuf(url), wanted);
+            blob = await queued.promise;
             DB.set(url, blob);
         }
         return URL.createObjectURL(blob);
     })();
-    p.catch(() => imgCache.delete(url));
-    imgCache.set(url, p);
-    return p;
+    record.promise.catch(() => {
+        if (imgCache.get(url) === record) imgCache.delete(url);
+    });
+    imgCache.set(url, record);
+    return record.promise;
 }
 
 export async function clearImgs() {

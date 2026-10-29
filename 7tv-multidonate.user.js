@@ -6,9 +6,9 @@
 // @description  Эмоуты 7TV в чате: кнопка 7TV, ник стримера, размер, список эмоутов, быстрый кеш
 // @match        https://play.multidonate.ru/*
 // @icon         https://cdn.7tv.app/emote/01F71VQYHR000D3ZZ6Q11NR7TV/2x.webp
-// @homepageURL  https://github.com/mykhailkot-pixel/Legion7TV
-// @updateURL    https://github.com/mykhailkot-pixel/Legion7TV/raw/refs/heads/main/7tv-multidonate.user.js
-// @downloadURL  https://github.com/mykhailkot-pixel/Legion7TV/raw/refs/heads/main/7tv-multidonate.user.js
+// @homepageURL  https://github.com/ko4nev812/Legion7TV
+// @updateURL    https://github.com/ko4nev812/Legion7TV/raw/refs/heads/main/7tv-multidonate.user.js
+// @downloadURL  https://github.com/ko4nev812/Legion7TV/raw/refs/heads/main/7tv-multidonate.user.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -21,7 +21,7 @@
 // @license      MIT
 // ==/UserScript==
 (() => {
-  var styles_default = ".t7-w{display:inline-block;position:relative;vertical-align:middle;line-height:0}\r\n.t7-e{display:inline-block;vertical-align:middle;height:var(--t7-h,1.9em);width:auto;min-width:var(--t7-h,1.9em)}\r\n.t7-zw{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%;width:auto;pointer-events:none}\r\n.t7-e:not([src]),.t7-zw:not([src]){visibility:hidden}\r\n\r\n\r\nform.cy-chat-f .t7-btn{\r\n    flex:none;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;\r\n    box-sizing:border-box;width:auto;height:auto;min-height:28px;margin:0 0 0 4px;padding:0 8px;\r\n    border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(145,70,255,.9);color:#fff;\r\n    font:700 11px/1 system-ui,sans-serif;letter-spacing:0;text-indent:0;text-transform:none;\r\n    white-space:nowrap;vertical-align:middle;cursor:pointer}\r\nform.cy-chat-f .t7-btn:hover{background:rgb(165,100,255)}\r\n\r\n\r\n.t7-pop,.t7-set{\r\n    --t7-bg:#1b1b24;--t7-bg-in:#0f0f15;--t7-fg:#eee;--t7-mute:#aaa;\r\n    --t7-line:rgba(255,255,255,.2);--t7-hover:rgba(255,255,255,.14);--t7-acc:#9146ff}\r\n.t7-pop *,.t7-set *{box-sizing:border-box}\r\n.t7-pop button,.t7-sw button{font:inherit;cursor:pointer}\r\n.t7-pop [hidden]{display:none!important}\r\n\r\n\r\n.t7-x,.t7-g{background:none;border:0;color:#ccc;line-height:1;border-radius:6px}\r\n.t7-x{font-size:20px;padding:0 4px}\r\n.t7-g{font-size:16px;padding:2px 5px}\r\n.t7-x:hover,.t7-g:hover{background:var(--t7-hover);color:#fff}\r\n\r\n\r\n.t7-pop{\r\n    position:fixed;z-index:2147483000;display:flex;flex-direction:column;gap:8px;\r\n    padding:10px;background:var(--t7-bg);color:var(--t7-fg);\r\n    border:1px solid rgba(255,255,255,.18);border-radius:10px;\r\n    box-shadow:0 8px 28px rgba(0,0,0,.55);font:13px/1.3 system-ui,sans-serif}\r\n.t7-pop.t7-drag{will-change:transform;transition:none}\r\n.t7-pop.t7-drag .t7-gr{pointer-events:none}\r\n\r\n.t7-h,.t7-sth{display:flex;justify-content:space-between;align-items:center;\r\n    font-size:15px;cursor:grab;touch-action:none;user-select:none}\r\n.t7-h:active,.t7-sth:active{cursor:grabbing}\r\n.t7-hb{display:flex;align-items:center;gap:2px}\r\n\r\n.t7-pop input[type=search]{\r\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\r\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\r\n.t7-views{display:flex;gap:3px;padding:2px;border:1px solid var(--t7-line);border-radius:6px;background:var(--t7-bg-in)}\r\n.t7-views button{flex:1;padding:5px 7px;border:0;border-radius:4px;background:transparent;color:var(--t7-mute);font-size:12px}\r\n.t7-views button[aria-selected=true]{background:var(--t7-hover);color:var(--t7-fg)}\r\n\r\n.t7-gr{flex:1;min-height:156px;overflow-y:auto;overscroll-behavior:contain}\r\n.t7-sh{margin:6px 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--t7-mute)}\r\n.t7-gw{display:flex;flex-wrap:wrap;gap:2px}\r\n.t7-it{display:inline-flex;align-items:center;justify-content:center;\r\n    width:var(--t7-tile,40px);height:var(--t7-tile,40px);padding:3px;border:0;border-radius:6px;background:transparent}\r\n.t7-it:hover,.t7-it:focus-visible{background:var(--t7-hover)}\r\n.t7-it img{width:100%;height:100%;object-fit:contain}\r\n.t7-item{position:relative;flex:none;width:var(--t7-tile,40px);height:var(--t7-tile,40px)}\r\n.t7-item .t7-it{width:100%;height:100%}\r\n.t7-fav{position:absolute;top:0;right:0;z-index:1;display:grid;place-items:center;width:17px;height:17px;padding:0;border:0;border-radius:4px;background:rgba(15,15,21,.82);color:#e5c76b;font:14px/1 system-ui,sans-serif;opacity:.78}\r\n.t7-fav:hover,.t7-fav:focus-visible{opacity:1;background:var(--t7-hover)}\r\n.t7-emp{padding:16px 4px;color:var(--t7-mute);text-align:center}\r\n\r\n.t7-rs{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;\r\n    border-radius:0 0 10px 0;\r\n    background:linear-gradient(135deg,transparent 0 55%,#888 55% 62%,transparent 62% 72%,#888 72% 79%,transparent 79%)}\r\n\r\n\r\n.t7-set{\r\n    position:fixed;inset:0;z-index:2147483200;display:flex;align-items:center;justify-content:center;\r\n    padding:12px;background:rgba(0,0,0,.5);font:13px/1.3 system-ui,sans-serif}\r\n.t7-sw{\r\n    width:380px;max-width:100%;max-height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:16px;\r\n    padding:14px;background:var(--t7-bg);color:var(--t7-fg);\r\n    border:1px solid rgba(255,255,255,.18);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6)}\r\n.t7-sw.t7-drag{will-change:transform}\r\n\r\n.t7-sec{display:flex;flex-direction:column;gap:6px}\r\n.t7-sec>h4{margin:0;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--t7-mute)}\r\n.t7-row{display:flex;gap:6px;align-items:flex-end}\r\n.t7-wrap{flex-wrap:wrap}\r\n.t7-fl{flex:1;display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--t7-mute)}\r\n.t7-chk{display:flex;gap:8px;align-items:center;cursor:pointer}\r\n.t7-sst{min-height:1.3em;font-size:11px;color:var(--t7-mute)}\r\n\r\n.t7-sw input[type=text],.t7-sw input[type=number]{\r\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\r\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\r\n.t7-sw textarea,.t7-sw select{\r\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\r\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\r\n.t7-sw textarea{resize:vertical;min-height:44px}\r\n.t7-volume{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px}\r\n.t7-volume input{grid-column:1/-1;width:100%;margin:2px 0}\r\n.t7-volume output,.t7-ping-status{font-size:11px;color:var(--t7-mute)}\r\n.t7-ping-status{min-height:1.3em}\r\n\r\n.t7-b{padding:6px 10px;border-radius:6px;border:1px solid var(--t7-line);background:var(--t7-bg-in);color:#ddd}\r\n.t7-b:hover{background:#1d1d29}\r\n.t7-b.p{background:var(--t7-acc);border-color:var(--t7-acc);color:#fff}\r\n\r\n.t7-szb{display:flex;gap:4px}\r\n.t7-szb button{min-width:34px;padding:4px 8px;border-radius:6px;border:1px solid var(--t7-line);background:var(--t7-bg-in);color:#ddd}\r\n.t7-szb button[aria-pressed=true]{background:var(--t7-acc);border-color:var(--t7-acc);color:#fff}\r\n\r\n\r\n.cy-chat-tabs:not([hidden]){\r\n    display:flex;flex-wrap:nowrap;gap:2px;width:100%;max-width:100%;min-width:0;box-sizing:border-box;\r\n    overflow-x:auto;overflow-y:hidden;scrollbar-width:none}\r\n.cy-chat-tabs::-webkit-scrollbar{display:none}\r\n.cy-chat-tabs>button[data-tab]{\r\n    flex:0 0 auto;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:3px;\r\n    padding:5px 6px;font-size:11px;line-height:1.2;white-space:nowrap;overflow:visible}\r\n.cy-chat-tabs>button .cy-chat-tn{flex:none;margin:0;min-width:1.5em;padding:1px 4px;line-height:1.3;text-align:center;overflow:visible}\r\n\r\n\r\n.cy-chat .cy-chat-n,\r\n.cy-chat .cy-chat-tn,\r\n.cy-chat .cy-chat-tp,\r\n.cy-chat .cy-chat-pn{\r\n    flex:none;display:inline-block;box-sizing:border-box;min-width:18px;height:18px;margin:0 0 0 4px;padding:0 5px;\r\n    border-radius:9px;font:700 11px/18px system-ui,sans-serif;text-align:center;text-indent:0;overflow:visible}\r\n.cy-chat .cy-chat-n,\r\n.cy-chat .cy-chat-tn{background:#e53935;color:#fff}\r\n.cy-chat .cy-chat-tp,\r\n.cy-chat .cy-chat-pn{background:#ffc94d;color:#1b1b24}\r\n.cy-chat .cy-chat-n[hidden],\r\n.cy-chat .cy-chat-tn[hidden],\r\n.cy-chat .cy-chat-tp[hidden],\r\n.cy-chat .cy-chat-pn[hidden]{display:none!important}\r\n.cy-chat-l>li.t7-filtered{font-style:italic}\r\n.cy-chat-l>li>.t7-filter-label{display:inline-block;margin-right:5px;padding:2px 6px;border-radius:4px;background:rgba(255,201,77,.14);color:#ffca66;font-size:13px;font-weight:700;white-space:nowrap}\r\n.cy-chat-l>li.t7-filtered>:not(.t7-filter-label){display:none!important}";
+  var styles_default = ".t7-w{display:inline-block;position:relative;vertical-align:middle;line-height:0}\n.t7-e{display:inline-block;vertical-align:middle;height:var(--t7-h,1.9em);width:auto;min-width:var(--t7-h,1.9em)}\n.t7-zw{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%;width:auto;pointer-events:none}\n.t7-e:not([src]),.t7-zw:not([src]){visibility:hidden}\n.t7-tip{\n    position:fixed;z-index:2147483646;display:flex;gap:12px;width:300px;max-width:calc(100vw - 16px);\n    padding:12px;border:1px solid rgba(255,255,255,.18);border-radius:10px;\n    background:#18181b;color:#efeff1;box-shadow:0 8px 28px rgba(0,0,0,.6);\n    font:13px/1.35 system-ui,sans-serif;pointer-events:none;box-sizing:border-box}\n.t7-tip[hidden]{display:none!important}\n.t7-tip-preview{\n    flex:none;display:flex;align-items:center;justify-content:center;width:104px;height:104px;padding:6px;\n    border-radius:8px;background:#0e0e10;box-sizing:border-box}\n.t7-tip-preview img{display:block;max-width:100%;max-height:100%;object-fit:contain}\n.t7-tip-preview img:not([src]),.t7-tip-loading{visibility:hidden}\n.t7-tip-info{min-width:0;display:flex;flex:1;flex-direction:column;justify-content:center;gap:8px}\n.t7-tip-name{font-size:16px;line-height:1.2;overflow-wrap:anywhere}\n.t7-tip-rows{display:flex;flex-direction:column;gap:3px}\n.t7-tip-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;color:#dedee3}\n.t7-tip-row>span:first-child{color:#adadb8}\n.t7-tip-row>span:last-child{overflow-wrap:anywhere}\n.t7-tip-id{font:11px/1.35 ui-monospace,SFMono-Regular,Consolas,monospace}\nform.cy-chat-f .t7-btn{\n    flex:none;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;\n    box-sizing:border-box;width:auto;height:auto;min-height:28px;margin:0 0 0 4px;padding:0 8px;\n    border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(145,70,255,.9);color:#fff;\n    font:700 11px/1 system-ui,sans-serif;letter-spacing:0;text-indent:0;text-transform:none;\n    white-space:nowrap;vertical-align:middle;cursor:pointer}\nform.cy-chat-f .t7-btn:hover{background:rgb(165,100,255)}\n.t7-pop,.t7-set{\n    --t7-bg:#1b1b24;--t7-bg-in:#0f0f15;--t7-fg:#eee;--t7-mute:#aaa;\n    --t7-line:rgba(255,255,255,.2);--t7-hover:rgba(255,255,255,.14);--t7-acc:#9146ff}\n.t7-pop *,.t7-set *{box-sizing:border-box}\n.t7-pop button,.t7-sw button{font:inherit;cursor:pointer}\n.t7-pop [hidden]{display:none!important}\n.t7-x,.t7-g{background:none;border:0;color:#ccc;line-height:1;border-radius:6px}\n.t7-x{font-size:20px;padding:0 4px}\n.t7-g{font-size:16px;padding:2px 5px}\n.t7-x:hover,.t7-g:hover{background:var(--t7-hover);color:#fff}\n.t7-pop{\n    position:fixed;z-index:2147483000;display:flex;flex-direction:column;gap:8px;\n    padding:10px;background:var(--t7-bg);color:var(--t7-fg);\n    border:1px solid rgba(255,255,255,.18);border-radius:10px;\n    box-shadow:0 8px 28px rgba(0,0,0,.55);font:13px/1.3 system-ui,sans-serif}\n.t7-pop.t7-drag{will-change:transform;transition:none}\n.t7-pop.t7-drag .t7-gr{pointer-events:none}\n.t7-h,.t7-sth{display:flex;justify-content:space-between;align-items:center;\n    font-size:15px;cursor:grab;touch-action:none;user-select:none}\n.t7-h:active,.t7-sth:active{cursor:grabbing}\n.t7-hb{display:flex;align-items:center;gap:2px}\n.t7-pop input[type=search]{\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\n.t7-views{display:flex;gap:3px;padding:2px;border:1px solid var(--t7-line);border-radius:6px;background:var(--t7-bg-in)}\n.t7-views button{flex:1;padding:5px 7px;border:0;border-radius:4px;background:transparent;color:var(--t7-mute);font-size:12px}\n.t7-views button[aria-selected=true]{background:var(--t7-hover);color:var(--t7-fg)}\n.t7-gr{flex:1;min-height:156px;overflow-y:auto;overscroll-behavior:contain}\n.t7-sh{margin:6px 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--t7-mute)}\n.t7-gw{display:flex;flex-wrap:wrap;gap:2px}\n.t7-it{display:inline-flex;align-items:center;justify-content:center;\n    width:var(--t7-tile,40px);height:var(--t7-tile,40px);padding:3px;border:0;border-radius:6px;background:transparent}\n.t7-it:hover,.t7-it:focus-visible{background:var(--t7-hover)}\n.t7-it img{width:100%;height:100%;object-fit:contain}\n.t7-item{position:relative;flex:none;width:var(--t7-tile,40px);height:var(--t7-tile,40px)}\n.t7-item .t7-it{width:100%;height:100%}\n.t7-fav{position:absolute;top:0;right:0;z-index:1;display:grid;place-items:center;width:17px;height:17px;padding:0;border:0;border-radius:4px;background:rgba(15,15,21,.82);color:#e5c76b;font:14px/1 system-ui,sans-serif;opacity:.78}\n.t7-fav:hover,.t7-fav:focus-visible{opacity:1;background:var(--t7-hover)}\n.t7-emp{padding:16px 4px;color:var(--t7-mute);text-align:center}\n.t7-rs{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;\n    border-radius:0 0 10px 0;\n    background:linear-gradient(135deg,transparent 0 55%,#888 55% 62%,transparent 62% 72%,#888 72% 79%,transparent 79%)}\n.t7-set{\n    position:fixed;inset:0;z-index:2147483200;display:flex;align-items:center;justify-content:center;\n    padding:12px;background:rgba(0,0,0,.5);font:13px/1.3 system-ui,sans-serif}\n.t7-sw{\n    width:380px;max-width:100%;max-height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:16px;\n    padding:14px;background:var(--t7-bg);color:var(--t7-fg);\n    border:1px solid rgba(255,255,255,.18);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6)}\n.t7-sw.t7-drag{will-change:transform}\n.t7-sec{display:flex;flex-direction:column;gap:6px}\n.t7-sec>h4{margin:0;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--t7-mute)}\n.t7-row{display:flex;gap:6px;align-items:flex-end}\n.t7-wrap{flex-wrap:wrap}\n.t7-fl{flex:1;display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--t7-mute)}\n.t7-chk{display:flex;gap:8px;align-items:center;cursor:pointer}\n.t7-sst{min-height:1.3em;font-size:11px;color:var(--t7-mute)}\n.t7-sw input[type=text],.t7-sw input[type=number]{\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\n.t7-sw textarea,.t7-sw select{\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\n.t7-sw textarea{resize:vertical;min-height:44px}\n.t7-volume{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px}\n.t7-volume input{grid-column:1/-1;width:100%;margin:2px 0}\n.t7-volume output,.t7-ping-status{font-size:11px;color:var(--t7-mute)}\n.t7-ping-status{min-height:1.3em}\n.t7-b{padding:6px 10px;border-radius:6px;border:1px solid var(--t7-line);background:var(--t7-bg-in);color:#ddd}\n.t7-b:hover{background:#1d1d29}\n.t7-b.p{background:var(--t7-acc);border-color:var(--t7-acc);color:#fff}\n.t7-szb{display:flex;gap:4px}\n.t7-szb button{min-width:34px;padding:4px 8px;border-radius:6px;border:1px solid var(--t7-line);background:var(--t7-bg-in);color:#ddd}\n.t7-szb button[aria-pressed=true]{background:var(--t7-acc);border-color:var(--t7-acc);color:#fff}\n.cy-chat-tabs:not([hidden]){\n    display:flex;flex-wrap:nowrap;gap:2px;width:100%;max-width:100%;min-width:0;box-sizing:border-box;\n    overflow-x:auto;overflow-y:hidden;scrollbar-width:none}\n.cy-chat-tabs::-webkit-scrollbar{display:none}\n.cy-chat-tabs>button[data-tab]{\n    flex:0 0 auto;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:3px;\n    padding:5px 6px;font-size:11px;line-height:1.2;white-space:nowrap;overflow:visible}\n.cy-chat-tabs>button .cy-chat-tn{flex:none;margin:0;min-width:1.5em;padding:1px 4px;line-height:1.3;text-align:center;overflow:visible}\n.cy-chat .cy-chat-n,\n.cy-chat .cy-chat-tn,\n.cy-chat .cy-chat-tp,\n.cy-chat .cy-chat-pn{\n    flex:none;display:inline-block;box-sizing:border-box;min-width:18px;height:18px;margin:0 0 0 4px;padding:0 5px;\n    border-radius:9px;font:700 11px/18px system-ui,sans-serif;text-align:center;text-indent:0;overflow:visible}\n.cy-chat .cy-chat-n,\n.cy-chat .cy-chat-tn{background:#e53935;color:#fff}\n.cy-chat .cy-chat-tp,\n.cy-chat .cy-chat-pn{background:#ffc94d;color:#1b1b24}\n.cy-chat .cy-chat-n[hidden],\n.cy-chat .cy-chat-tn[hidden],\n.cy-chat .cy-chat-tp[hidden],\n.cy-chat .cy-chat-pn[hidden]{display:none!important}\n.cy-chat-l>li.t7-filtered{font-style:italic}\n.cy-chat-l>li>.t7-filter-label{display:inline-block;margin-right:5px;padding:2px 6px;border-radius:4px;background:rgba(255,201,77,.14);color:#ffca66;font-size:13px;font-weight:700;white-space:nowrap}\n.cy-chat-l>li.t7-filtered>:not(.t7-filter-label){display:none!important}";
   var CACHE_TTL = 60 * 60 * 1e3;
   var SIZES = {
     s: { h: "1.3em", n: 2, p: 32, label: "S" },
@@ -46,6 +46,7 @@
     pop: null,
     anchor: null,
     io: null,
+    visibleIo: null,
     status: "",
     loadToken: 0,
     hooks: {
@@ -135,13 +136,17 @@
     });
     return new Blob([buf2], { type });
   };
-  function mk(host, flags, isGlobal, isExtra) {
+  function mk(host, flags, isGlobal, isExtra, meta = {}) {
     const files = (host.files || []).filter((f) => f.format === "WEBP").map((f) => f.name);
+    const owner = meta.owner || {};
     return {
       base: "https:" + host.url,
       f: files.length ? files : ["1x.webp", "2x.webp"],
       zw: !!(flags & 256),
       g: isGlobal,
+      id: String(meta.id || ""),
+      owner: String(owner.display_name || owner.username || ""),
+      animated: typeof meta.animated === "boolean" ? meta.animated : null,
       ...isExtra ? { x: true } : {}
     };
   }
@@ -149,14 +154,22 @@
     for (const e of set && set.emotes || []) {
       const host = e.data && e.data.host;
       if (!host || !host.url || e.name === "__proto__") continue;
-      map[e.name] = mk(host, e.data.flags, isGlobal, isExtra);
+      map[e.name] = mk(host, e.data.flags, isGlobal, isExtra, {
+        id: e.id || e.data.id,
+        owner: e.data.owner,
+        animated: e.data.animated
+      });
     }
   }
   function addOne(map, em, alias) {
     const host = em && em.host;
     const name = String(alias || em && em.name || "");
     if (!host || !host.url || !name || /\s/.test(name) || name === "__proto__") return false;
-    map[name] = mk(host, em.flags, true, true);
+    map[name] = mk(host, em.flags, true, true, {
+      id: em.id,
+      owner: em.owner,
+      animated: em.animated
+    });
     return true;
   }
   var xsig = () => {
@@ -200,44 +213,46 @@
     return em.base + "/" + (best || em.f[0]);
   }
   async function loadEmotes(nick, force) {
-    const key = "t7c2:" + nick + ":" + xsig();
+    const key = "t7c3:" + nick + ":" + xsig();
     if (!force) {
       const c = store.get(key);
       if (c) return { map: c.map, msg: c.msg, stale: Date.now() - c.at >= CACHE_TTL };
     }
-    const map = {};
-    let err = "";
-    try {
-      addSet(map, await getJson("https://7tv.io/v3/emote-sets/global"), true, false);
-    } catch (e) {
-      err = "\u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u044B\u0435 \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043B\u0438\u0441\u044C";
-      console.warn("[7TV]", e);
-    }
-    let chanMsg = "";
-    if (!nick) {
-      chanMsg = "\u0443\u043A\u0430\u0436\u0438 \u043D\u0438\u043A \u0441\u0442\u0440\u0438\u043C\u0435\u0440\u0430";
-    } else {
+    const globalJob = (async () => {
+      const map2 = {};
+      try {
+        addSet(map2, await getJson("https://7tv.io/v3/emote-sets/global"), true, false);
+        return { map: map2, err: "" };
+      } catch (e) {
+        console.warn("[7TV]", e);
+        return { map: map2, err: "\u0433\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u044B\u0435 \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043B\u0438\u0441\u044C" };
+      }
+    })();
+    const channelJob = (async () => {
+      const map2 = {};
+      if (!nick) return { map: map2, msg: "\u0443\u043A\u0430\u0436\u0438 \u043D\u0438\u043A \u0441\u0442\u0440\u0438\u043C\u0435\u0440\u0430" };
       try {
         const u = await getJson("https://api.ivr.fi/v2/twitch/user?login=" + encodeURIComponent(nick));
         const id = u && u[0] && u[0].id;
-        if (!id) chanMsg = "Twitch-\u043A\u0430\u043D\u0430\u043B \xAB" + nick + "\xBB \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D";
-        else {
-          const user = await getJson("https://7tv.io/v3/users/twitch/" + id);
-          const set = user && user.emote_set;
-          if (set && set.emotes && set.emotes.length) addSet(map, set, false, false);
-          else chanMsg = "\u0443 \u043A\u0430\u043D\u0430\u043B\u0430 \u043D\u0435\u0442 \u044D\u043C\u043E\u0443\u0442\u043E\u0432 7TV";
+        if (!id) return { map: map2, msg: "Twitch-\u043A\u0430\u043D\u0430\u043B \xAB" + nick + "\xBB \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D" };
+        const user = await getJson("https://7tv.io/v3/users/twitch/" + id);
+        const set = user && user.emote_set;
+        if (set && set.emotes && set.emotes.length) {
+          addSet(map2, set, false, false);
+          return { map: map2, msg: "" };
         }
+        return { map: map2, msg: "\u0443 \u043A\u0430\u043D\u0430\u043B\u0430 \u043D\u0435\u0442 \u044D\u043C\u043E\u0443\u0442\u043E\u0432 7TV" };
       } catch (e) {
-        chanMsg = "\u044D\u043C\u043E\u0443\u0442\u044B \u043A\u0430\u043D\u0430\u043B\u0430 \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043B\u0438\u0441\u044C (\u043D\u0435\u0442 \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0430 7TV \u0438\u043B\u0438 \u0441\u0435\u0440\u0432\u0438\u0441 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D)";
         console.warn("[7TV]", e);
+        return { map: map2, msg: "\u044D\u043C\u043E\u0443\u0442\u044B \u043A\u0430\u043D\u0430\u043B\u0430 \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043B\u0438\u0441\u044C (\u043D\u0435\u0442 \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0430 7TV \u0438\u043B\u0438 \u0441\u0435\u0440\u0432\u0438\u0441 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D)" };
       }
-    }
-    let bad = 0;
-    if (EXTRA_EMOTES.length || EXTRA_SETS.length) {
-      const ex = await loadExtras();
-      Object.assign(map, ex.map);
-      bad = ex.bad;
-    }
+    })();
+    const extrasJob = EXTRA_EMOTES.length || EXTRA_SETS.length ? loadExtras() : Promise.resolve({ map: {}, bad: 0 });
+    const [global, channel, extras] = await Promise.all([globalJob, channelJob, extrasJob]);
+    const map = Object.assign({}, global.map, channel.map, extras.map);
+    const err = global.err;
+    const chanMsg = channel.msg;
+    const bad = extras.bad;
     const names = Object.keys(map);
     const nc = names.filter((n) => !map[n].g).length;
     const xc = names.filter((n) => map[n].x).length;
@@ -304,40 +319,197 @@
       clear: () => tx("readwrite", (s) => s.clear())
     };
   })();
-  var Q = { hi: [], lo: [], run: 0, max: 8 };
+  var Q = { wait: [], run: 0, running: [0, 0, 0], max: 10, next: 0 };
+  var limitFor = (priority) => priority === 0 ? 4 : priority === 1 ? 8 : Q.max;
   function pump() {
     while (Q.run < Q.max) {
-      const j = Q.hi.shift() || Q.lo.shift();
-      if (!j) return;
+      let best = -1;
+      for (let i = 0; i < Q.wait.length; i++) {
+        const a = Q.wait[i], b = Q.wait[best];
+        if (best < 0 || a.priority > b.priority || a.priority === b.priority && a.order < b.order) best = i;
+      }
+      if (best < 0) return;
+      const j = Q.wait[best];
+      if (Q.run >= limitFor(j.priority)) return;
+      Q.wait.splice(best, 1);
+      j.started = true;
       Q.run++;
-      j.fn().then(j.res, j.rej).finally(() => {
+      Q.running[j.priority]++;
+      Promise.resolve().then(j.fn).then(j.res, j.rej).finally(() => {
         Q.run--;
+        Q.running[j.priority]--;
         pump();
       });
     }
   }
-  var enqueue = (fn, hi) => new Promise((res, rej) => {
-    (hi ? Q.hi : Q.lo).push({ fn, res, rej });
-    pump();
-  });
+  function enqueue(fn, priority) {
+    let job;
+    const promise = new Promise((res, rej) => {
+      job = { fn, res, rej, priority, order: Q.next++, started: false };
+      Q.wait.push(job);
+      pump();
+    });
+    return {
+      promise,
+      promote(nextPriority) {
+        if (!job.started && nextPriority > job.priority) {
+          job.priority = nextPriority;
+          pump();
+        }
+      }
+    };
+  }
+  var priorityOf = (value) => typeof value === "number" ? Math.max(0, Math.min(2, Math.round(value))) : value ? 2 : 0;
   var imgCache = /* @__PURE__ */ new Map();
-  function fetchImg(url, hi) {
-    if (imgCache.has(url)) return imgCache.get(url);
-    const p = (async () => {
+  function fetchImg(url, priority) {
+    const requested = priorityOf(priority);
+    const cached = imgCache.get(url);
+    if (cached) {
+      cached.promote(requested);
+      return cached.promise;
+    }
+    let wanted = requested;
+    let queued = null;
+    const record = {
+      promise: null,
+      promote(nextPriority) {
+        wanted = Math.max(wanted, nextPriority);
+        if (queued) queued.promote(wanted);
+      }
+    };
+    record.promise = (async () => {
       let blob = await DB.get(url);
       if (!blob) {
-        blob = await enqueue(() => getBuf(url), hi);
+        queued = enqueue(() => getBuf(url), wanted);
+        blob = await queued.promise;
         DB.set(url, blob);
       }
       return URL.createObjectURL(blob);
     })();
-    p.catch(() => imgCache.delete(url));
-    imgCache.set(url, p);
-    return p;
+    record.promise.catch(() => {
+      if (imgCache.get(url) === record) imgCache.delete(url);
+    });
+    imgCache.set(url, record);
+    return record.promise;
   }
   async function clearImgs() {
     imgCache.clear();
     await DB.clear();
+  }
+  var tooltipData = /* @__PURE__ */ new WeakMap();
+  var tooltip = null;
+  var current = null;
+  var initialized = false;
+  var imageToken = 0;
+  function setEmoteTooltipData(element, name, emote) {
+    if (element && emote) tooltipData.set(element, { name, emote });
+  }
+  function findTarget(node) {
+    const element = node instanceof Element ? node.closest(".t7-e,.t7-it") : null;
+    return element && tooltipData.has(element) ? element : null;
+  }
+  function ensureTooltip() {
+    if (tooltip) return tooltip;
+    tooltip = document.createElement("div");
+    tooltip.className = "t7-tip";
+    tooltip.id = "t7-emote-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.hidden = true;
+    tooltip.innerHTML = '<div class="t7-tip-preview"><img alt=""></div><div class="t7-tip-info"><strong class="t7-tip-name"></strong><div class="t7-tip-rows"></div></div>';
+    document.body.appendChild(tooltip);
+    return tooltip;
+  }
+  function addRow(rows, label, value, className = "") {
+    if (!value) return;
+    const row = document.createElement("div");
+    row.className = "t7-tip-row";
+    const key = document.createElement("span");
+    key.textContent = label;
+    const content = document.createElement("span");
+    content.textContent = value;
+    if (className) content.className = className;
+    row.append(key, content);
+    rows.appendChild(row);
+  }
+  function sourceName(emote) {
+    if (emote.x) return "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u0441\u043A\u0438\u0439";
+    return emote.g ? "\u0413\u043B\u043E\u0431\u0430\u043B\u044C\u043D\u044B\u0439 7TV" : "\u041A\u0430\u043D\u0430\u043B 7TV";
+  }
+  function position(clientX, clientY) {
+    if (!tooltip || tooltip.hidden) return;
+    const gap = 14;
+    const margin = 8;
+    const rect = tooltip.getBoundingClientRect();
+    let left = clientX + gap;
+    let top = clientY + gap;
+    if (left + rect.width > innerWidth - margin) left = clientX - rect.width - gap;
+    if (top + rect.height > innerHeight - margin) top = clientY - rect.height - gap;
+    tooltip.style.left = Math.max(margin, left) + "px";
+    tooltip.style.top = Math.max(margin, top) + "px";
+  }
+  function show(target, clientX, clientY) {
+    const data = tooltipData.get(target);
+    if (!data) return;
+    if (current && current !== target) current.removeAttribute("aria-describedby");
+    current = target;
+    const tip = ensureTooltip();
+    const { name, emote } = data;
+    tip.querySelector(".t7-tip-name").textContent = name;
+    const rows = tip.querySelector(".t7-tip-rows");
+    rows.textContent = "";
+    addRow(rows, "\u0418\u0441\u0442\u043E\u0447\u043D\u0438\u043A", sourceName(emote));
+    addRow(rows, "\u0410\u0432\u0442\u043E\u0440", emote.owner);
+    if (emote.animated !== null && emote.animated !== void 0)
+      addRow(rows, "\u0422\u0438\u043F", emote.animated ? "\u0410\u043D\u0438\u043C\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439" : "\u0421\u0442\u0430\u0442\u0438\u0447\u043D\u044B\u0439");
+    if (emote.zw) addRow(rows, "\u041D\u0430\u043B\u043E\u0436\u0435\u043D\u0438\u0435", "Zero-width");
+    addRow(rows, "ID", emote.id, "t7-tip-id");
+    const image = tip.querySelector("img");
+    const token = ++imageToken;
+    image.removeAttribute("src");
+    image.classList.add("t7-tip-loading");
+    tip.hidden = false;
+    target.setAttribute("aria-describedby", tip.id);
+    position(clientX, clientY);
+    fetchImg(urlFor(emote, 4), true).then((src) => {
+      if (current !== target || token !== imageToken) return;
+      image.src = src;
+      image.classList.remove("t7-tip-loading");
+    }, () => {
+      if (current === target && token === imageToken) image.classList.remove("t7-tip-loading");
+    });
+  }
+  function hide() {
+    if (current) current.removeAttribute("aria-describedby");
+    current = null;
+    imageToken++;
+    if (tooltip) tooltip.hidden = true;
+  }
+  function initEmoteTooltip() {
+    if (initialized) return;
+    initialized = true;
+    document.addEventListener("mouseover", (event) => {
+      const target = findTarget(event.target);
+      if (!target || target === current) return;
+      show(target, event.clientX, event.clientY);
+    });
+    document.addEventListener("mousemove", (event) => {
+      if (current) position(event.clientX, event.clientY);
+    });
+    document.addEventListener("mouseout", (event) => {
+      if (!current) return;
+      const next = findTarget(event.relatedTarget);
+      if (next === current) return;
+      hide();
+    });
+    document.addEventListener("focusin", (event) => {
+      const target = findTarget(event.target);
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      show(target, rect.right, rect.bottom);
+    });
+    document.addEventListener("focusout", (event) => {
+      if (current === findTarget(event.target)) hide();
+    });
   }
   document.addEventListener("scroll", (e) => {
     const t = e.target;
@@ -357,7 +529,7 @@
     const img = document.createElement("img");
     img.className = cls;
     img.alt = name;
-    img.title = name;
+    setEmoteTooltipData(img, name, em);
     img.addEventListener("load", () => stickFrom(img));
     fetchImg(urlFor(em, SIZES[S.size].n), true).then(
       (d) => {
@@ -925,18 +1097,31 @@
     if (!matchMedia("(pointer: coarse)").matches) inp.focus({ preventScroll: true });
     return true;
   }
-  function onVis(entries) {
+  function requestGridImage(el, priority) {
+    const em = emoteFor(el.dataset.name);
+    if (!em) return;
+    const request = fetchImg(urlFor(em, SIZES[S.size].n), priority);
+    if (el.dataset.l) return;
+    el.dataset.l = "1";
+    request.then((src) => {
+      if (el.isConnected) el.firstChild.src = src;
+    }, () => {
+    });
+  }
+  function onNear(entries) {
     for (const en of entries) {
       if (!en.isIntersecting) continue;
       const el = en.target;
       if (st.io) st.io.unobserve(el);
-      const em = emoteFor(el.dataset.name);
-      if (!em || el.dataset.l) continue;
-      el.dataset.l = "1";
-      fetchImg(urlFor(em, SIZES[S.size].n), false).then((d) => {
-        el.firstChild.src = d;
-      }, () => {
-      });
+      requestGridImage(el, 0);
+    }
+  }
+  function onVisible(entries) {
+    for (const en of entries) {
+      if (!en.isIntersecting) continue;
+      const el = en.target;
+      if (st.visibleIo) st.visibleIo.unobserve(el);
+      requestGridImage(el, 1);
     }
   }
   function filterGrid() {
@@ -945,9 +1130,9 @@
     st.pop.querySelectorAll(".t7-gw").forEach((w) => {
       let vis = 0;
       w.querySelectorAll(".t7-item").forEach((item) => {
-        const show = !q || item.dataset.name.toLowerCase().includes(q);
-        item.hidden = !show;
-        if (show) vis++;
+        const show2 = !q || item.dataset.name.toLowerCase().includes(q);
+        item.hidden = !show2;
+        if (show2) vis++;
       });
       w.hidden = !vis;
       w.previousElementSibling.hidden = !vis;
@@ -957,6 +1142,7 @@
     if (!st.pop) return;
     const gr = st.pop.querySelector(".t7-gr");
     st.io.disconnect();
+    st.visibleIo.disconnect();
     gr.textContent = "";
     const allNames = Object.keys(EM).sort((a, b) => a.localeCompare(b, void 0, { sensitivity: "base" }));
     const favoriteEntries = readEntries(FAVORITES_KEY);
@@ -982,8 +1168,8 @@
         b.type = "button";
         b.className = "t7-it";
         b.dataset.name = n;
-        b.title = n;
         b.setAttribute("aria-label", n);
+        setEmoteTooltipData(b, n, emoteFor(n));
         const im = document.createElement("img");
         im.alt = "";
         im.decoding = "async";
@@ -1000,6 +1186,7 @@
         item.append(b, favorite);
         w.appendChild(item);
         st.io.observe(b);
+        st.visibleIo.observe(b);
       }
       gr.append(h, w);
     };
@@ -1080,6 +1267,8 @@
     st.pop = null;
     if (st.io) st.io.disconnect();
     st.io = null;
+    if (st.visibleIo) st.visibleIo.disconnect();
+    st.visibleIo = null;
     document.removeEventListener("pointerdown", onOutside, true);
     document.removeEventListener("keydown", onKey2, true);
     removeEventListener("resize", place);
@@ -1233,7 +1422,8 @@
         if (gridMode === "recent") renderGrid();
       }
     });
-    st.io = new IntersectionObserver(onVis, { root: gr, rootMargin: "120px" });
+    st.io = new IntersectionObserver(onNear, { root: gr, rootMargin: "240px" });
+    st.visibleIo = new IntersectionObserver(onVisible, { root: gr });
     document.body.appendChild(pop);
     renderGrid();
     place();
@@ -1308,14 +1498,22 @@
     const S2 = i && i.K.state();
     return !!(S2 && S2.chat && S2.chat.on);
   }
-  function forward(room, d) {
+  function forward(room, d, sourceRoom) {
     if (!active(room)) return;
+    const chat = chatOf(room);
+    const forceUnread = !!(chat && sourceRoom && sourceRoom !== lastRoom);
+    const wasOpen = forceUnread && chat.C.open;
+    if (forceUnread) chat.C.open = false;
+    let applied = false;
     try {
       inst[room].raw.apply(d);
-      countPings(room, d && d.chat);
+      applied = true;
     } catch (e) {
       console.warn("[mine-tabs] forward", e);
+    } finally {
+      if (forceUnread) chat.C.open = wasOpen;
     }
+    if (applied) countPings(room, d && d.chat);
   }
   var mineHist = 0;
   async function loadMineHistory(K) {
@@ -1645,7 +1843,7 @@
         if (d) {
           if (Array.isArray(d.chat) && d.chat.length) push("city", d.chat);
           if (Array.isArray(d.chatDel) && d.chatDel.length) drop(d.chatDel);
-          if (d.chat || d.chatDel) forward("mine", { chat: d.chat, chatDel: d.chatDel });
+          if (d.chat || d.chatDel) forward("mine", { chat: d.chat, chatDel: d.chatDel }, "city");
         }
       } catch (e) {
         console.warn("[mine-tabs] city", e);
@@ -1663,7 +1861,7 @@
         if (d && d.chatRoom === "mine" && Array.isArray(d.chat) && !v.on) {
           const t = d.chat.map(tagMn);
           push("mine", t);
-          forward("city", { chat: t });
+          forward("city", { chat: t }, "mine");
         }
       } catch (e) {
         console.warn("[mine-tabs] mine", e);
@@ -1704,6 +1902,7 @@
     const style = document.createElement("style");
     style.textContent = styles_default;
     document.head.appendChild(style);
+    initEmoteTooltip();
     const sz = store.get("t7size");
     if (SIZES[sz]) S.size = sz;
     S.nick = store.get("t7nick:" + pageChan) || pageChan;

@@ -6,6 +6,7 @@ import { fetchImg } from './imgcache.js';
 import { urlFor } from './emotes.js';
 import { openSettings } from './settings.js';
 import { getRecentLimit } from './recentEmotes.js';
+import { setEmoteTooltipData } from './emoteTooltip.js';
 
 const FAVORITES_KEY = 't7favorites';
 const RECENT_KEY = 't7recent';
@@ -86,15 +87,32 @@ function insertEmote(name) {
 }
 
 /* ---------- список эмоутов ---------- */
-function onVis(entries) {
+function requestGridImage(el, priority) {
+    const em = emoteFor(el.dataset.name);
+    if (!em) return;
+    const request = fetchImg(urlFor(em, SIZES[S.size].n), priority);
+    if (el.dataset.l) return;   // повторный вызов всё равно повысил приоритет запроса
+    el.dataset.l = '1';
+    request.then((src) => {
+        if (el.isConnected) el.firstChild.src = src;
+    }, () => {});
+}
+
+function onNear(entries) {
     for (const en of entries) {
         if (!en.isIntersecting) continue;
         const el = en.target;
         if (st.io) st.io.unobserve(el);
-        const em = emoteFor(el.dataset.name);
-        if (!em || el.dataset.l) continue;
-        el.dataset.l = '1';
-        fetchImg(urlFor(em, SIZES[S.size].n), false).then((d) => { el.firstChild.src = d; }, () => {});
+        requestGridImage(el, 0);
+    }
+}
+
+function onVisible(entries) {
+    for (const en of entries) {
+        if (!en.isIntersecting) continue;
+        const el = en.target;
+        if (st.visibleIo) st.visibleIo.unobserve(el);
+        requestGridImage(el, 1);
     }
 }
 
@@ -117,6 +135,7 @@ export function renderGrid() {
     if (!st.pop) return;
     const gr = st.pop.querySelector('.t7-gr');
     st.io.disconnect();
+    st.visibleIo.disconnect();
     gr.textContent = '';
     const allNames = Object.keys(EM).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     const favoriteEntries = readEntries(FAVORITES_KEY);
@@ -143,8 +162,8 @@ export function renderGrid() {
             b.type = 'button';
             b.className = 't7-it';
             b.dataset.name = n;
-            b.title = n;
             b.setAttribute('aria-label', n);
+            setEmoteTooltipData(b, n, emoteFor(n));
             const im = document.createElement('img');
             im.alt = '';
             im.decoding = 'async';
@@ -161,6 +180,7 @@ export function renderGrid() {
             item.append(b, favorite);
             w.appendChild(item);
             st.io.observe(b);
+            st.visibleIo.observe(b);
         }
         gr.append(h, w);
     };
@@ -249,6 +269,8 @@ export function closePop() {
     st.pop = null;
     if (st.io) st.io.disconnect();
     st.io = null;
+    if (st.visibleIo) st.visibleIo.disconnect();
+    st.visibleIo = null;
     document.removeEventListener('pointerdown', onOutside, true);
     document.removeEventListener('keydown', onKey, true);
     removeEventListener('resize', place);
@@ -412,7 +434,8 @@ function openPop(btn) {
             if (gridMode === 'recent') renderGrid();
         }
     });
-    st.io = new IntersectionObserver(onVis, { root: gr, rootMargin: '120px' });
+    st.io = new IntersectionObserver(onNear, { root: gr, rootMargin: '240px' });
+    st.visibleIo = new IntersectionObserver(onVisible, { root: gr });
 
     document.body.appendChild(pop);
     renderGrid();

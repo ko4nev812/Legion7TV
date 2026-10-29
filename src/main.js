@@ -7,6 +7,7 @@ import { scan, rescanAll, applySize } from './chat.js';
 import { renderGrid, place } from './popup.js';
 import { updateSetStatus } from './settings.js';
 import { ensureButtons } from './buttons.js';
+import { initEmoteTooltip } from './emoteTooltip.js';
 import './minetabs.js';
 
 
@@ -14,6 +15,7 @@ function init() {
     const style = document.createElement('style');
     style.textContent = css;
     document.head.appendChild(style);
+    initEmoteTooltip();
 
     // сохранённые настройки
     const sz = store.get('t7size');

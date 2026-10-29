@@ -3,6 +3,7 @@ import { S, EM } from './state.js';
 import { has } from './util.js';
 import { fetchImg } from './imgcache.js';
 import { urlFor } from './emotes.js';
+import { setEmoteTooltipData } from './emoteTooltip.js';
 
 /* ---------- не даём ленте «уползать» вверх, когда эмоуты увеличивают строки ---------- */
 // scroll не всплывает, поэтому ловим в capture-фазе; программный рост высоты событие scroll не вызывает,
@@ -28,7 +29,7 @@ function makeImg(name, em, cls) {
     const img = document.createElement('img');
     img.className = cls;
     img.alt = name;
-    img.title = name;
+    setEmoteTooltipData(img, name, em);
     img.addEventListener('load', () => stickFrom(img));   // ширина эмоута могла поменять перенос строк
     fetchImg(urlFor(em, SIZES[S.size].n), true).then(
         (d) => { img.src = d; },
