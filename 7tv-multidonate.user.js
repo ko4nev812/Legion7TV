@@ -2,7 +2,7 @@
 // @author       ProCto_Fliy
 // @name         Legion chat extentions (7TV, более удобный чат и тд)
 // @namespace    https://play.multidonate.ru/
-// @version      4.10.1
+// @version      4.10.2
 // @description  Эмоуты 7TV в чате: кнопка 7TV, ник стримера, размер, список эмоутов, быстрый кеш
 // @match        https://play.multidonate.ru/*
 // @icon         https://cdn.7tv.app/emote/01F71VQYHR000D3ZZ6Q11NR7TV/2x.webp
@@ -671,6 +671,33 @@
       });
     }
   }
+  function downloadImage(src) {
+    return new Promise((resolve, reject) => {
+      const fail = () => reject(new Error("\u041E\u0448\u0438\u0431\u043A\u0430 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F"));
+      try {
+        GM_xmlhttpRequest({
+          method: "GET",
+          url: src,
+          responseType: "arraybuffer",
+          timeout: 3e4,
+          onerror: fail,
+          ontimeout: fail,
+          onabort: fail,
+          onload(response) {
+            try {
+              const type = /^content-type:\s*(image\/[a-z0-9.+-]+)/im.exec(response.responseHeaders || "")?.[1].toLowerCase();
+              if (response.status !== 200 || !type || !response.response?.byteLength) throw new Error();
+              resolve(URL.createObjectURL(new Blob([response.response], { type })));
+            } catch {
+              fail();
+            }
+          }
+        });
+      } catch {
+        fail();
+      }
+    });
+  }
   function resolveImage(id) {
     if (!ID.test(id)) return Promise.reject(new Error("\u041D\u0435\u0432\u0435\u0440\u043D\u0430\u044F \u0441\u0441\u044B\u043B\u043A\u0430"));
     if (requests.has(id)) return requests.get(id);
@@ -688,7 +715,7 @@
             onerror: fail,
             ontimeout: fail,
             onabort: fail,
-            onload(response) {
+            async onload(response) {
               try {
                 if (response.status !== 200) throw new Error();
                 const page = new DOMParser().parseFromString(response.responseText, "text/html");
@@ -706,7 +733,7 @@
                   }
                 });
                 if (!src) throw new Error();
-                resolve(src);
+                resolve(await downloadImage(src));
                 done();
               } catch {
                 fail();

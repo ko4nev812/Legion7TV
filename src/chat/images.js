@@ -49,6 +49,27 @@ function pump() {
         job().finally(() => { active--; pump(); });
     }
 }
+
+// The game's img-src permits blob: URLs, but blocks remote image URLs.
+// Download with Tampermonkey, keeping the original bytes (including GIF frames).
+function downloadImage(src) {
+    return new Promise((resolve, reject) => {
+        const fail = () => reject(new Error('Ошибка изображения'));
+        try {
+            GM_xmlhttpRequest({ method: 'GET', url: src, responseType: 'arraybuffer', timeout: 30000,
+                onerror: fail, ontimeout: fail, onabort: fail,
+                onload(response) {
+                    try {
+                        const type = /^content-type:\s*(image\/[a-z0-9.+-]+)/im.exec(response.responseHeaders || '')?.[1].toLowerCase();
+                        if (response.status !== 200 || !type || !response.response?.byteLength) throw new Error();
+                        resolve(URL.createObjectURL(new Blob([response.response], { type })));
+                    } catch { fail(); }
+                }
+            });
+        } catch { fail(); }
+    });
+}
+
 export function resolveImage(id) {
     if (!ID.test(id)) return Promise.reject(new Error('Неверная ссылка'));
     if (requests.has(id)) return requests.get(id);
@@ -58,7 +79,7 @@ export function resolveImage(id) {
             try {
                 GM_xmlhttpRequest({ method: 'GET', url: 'https://postimg.cc/' + id, timeout: 15000,
                     onerror: fail, ontimeout: fail, onabort: fail,
-                    onload(response) {
+                    async onload(response) {
                         try {
                             if (response.status !== 200) throw new Error();
                             const page = new DOMParser().parseFromString(response.responseText, 'text/html');
@@ -72,7 +93,7 @@ export function resolveImage(id) {
                                 catch { return false; }
                             });
                             if (!src) throw new Error();
-                            resolve(src);
+                            resolve(await downloadImage(src));
                             done();
                         } catch { fail(); }
                     }
