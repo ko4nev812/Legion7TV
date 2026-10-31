@@ -4,6 +4,7 @@ import { S } from '../core/state.js';
 import { processEmotes } from './chatEmotes.js';
 import { processLinks } from './links.js';
 import { processMentions } from './mentions.js';
+import { processImages } from './images.js';
 
 const processors = [];
 const SOURCE_KEY = 'l7tvEmoteSource';
@@ -13,6 +14,7 @@ export function registerChatProcessor(processor) {
 registerChatProcessor(processEmotes);
 registerChatProcessor(processLinks);
 registerChatProcessor(processMentions);
+registerChatProcessor(processImages);
 
 /* ---------- сохраняем положение ленты при обновлении сообщений ---------- */
 const scrollStates = new WeakMap();

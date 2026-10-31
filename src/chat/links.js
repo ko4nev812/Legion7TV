@@ -1,6 +1,7 @@
 // Ссылки в чате: отправка через [ref]{...}, разбор на приёме
 import { store } from '../core/store.js';
 import { STORE } from '../core/consts.js';
+import { imagePrefs, encodeImageLinks, rememberImages } from './images.js';
 
 export const SAY_RE = /^\/api\/(?:chat\/say|city\/say|mine\/chat\/say|dm\/say)(?:\?|$)/;
 const LINK_ENCODING_KEY = STORE.linkEncoding;
@@ -124,10 +125,15 @@ export function processLinks({ content }) {
 
 // call(path, body) - исходный api сайта
 export async function sendWithLinks(call, path, body) {
-    if (!isLinkEncodingEnabled()) return call(path, body);
     const text = body && body.text;
     if (typeof text !== 'string') return call(path, body);
-    if (HTTP_RE.test(text)) return { ok: false, error: 'ссылки http:// не отправляются - используй https://' };
-    const encoded = encodeLinks(text);
-    return call(path, encoded === text ? body : { ...body, text: encoded });
+    const imagesEnabled = imagePrefs().mode !== 'off';
+    let encoded = imagesEnabled ? encodeImageLinks(text) : text;
+    if (isLinkEncodingEnabled()) {
+        if (HTTP_RE.test(encoded)) return { ok: false, error: 'ссылки http:// не отправляются - используй https://' };
+        encoded = encodeLinks(encoded);
+    }
+    const result = await call(path, encoded === text ? body : { ...body, text: encoded });
+    if (imagesEnabled && result?.ok === true) rememberImages(encoded);
+    return result;
 }

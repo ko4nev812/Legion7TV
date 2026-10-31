@@ -12,6 +12,7 @@ import { isLinkEncodingEnabled, setLinkEncodingEnabled } from '../chat/links.js'
 import { CHAT_TABS, getChatTabPrefs, setChatTabPrefs } from '../chat/prefs.js';
 import { STORE } from '../core/consts.js';
 import { arePastesEnabled, setPastesEnabled } from '../chat/pastes.js';
+import { imagePrefs, setImagePrefs } from '../chat/images.js';
 
 // смещение окна настроек от центра экрана
 let SOFF = (() => {
@@ -131,6 +132,13 @@ export function openSettings() {
             </details>
 
             <details class="t7-sec">
+                <summary>Изображения imgBB</summary>
+                <label class="t7-fl">Отображение<select class="t7-images-mode"><option value="off">Выключено</option><option value="link">Кликабельная ссылка</option><option value="image">Картинка / GIF</option></select></label>
+                <label class="t7-chk"><input type="checkbox" class="t7-images-button"> Показывать кнопку imgBB рядом с 7TV</label>
+                <label class="t7-fl">Максимальная высота картинки (px)<input type="number" class="t7-images-height" min="60" max="1000" step="10"></label>
+            </details>
+
+            <details class="t7-sec">
                 <summary>Недавно использованные</summary>
                 <label class="t7-fl">Количество эмоутов в списке "Недавние"<input class="t7-recent-limit" type="number" min="1" max="100" step="1" inputmode="numeric"></label>
             </details>
@@ -190,6 +198,16 @@ export function openSettings() {
     });
 
     const pastesEnabled = el.querySelector('.t7-pastes-enabled');
+    const images = imagePrefs();
+    const imageMode = el.querySelector('.t7-images-mode');
+    const imageButton = el.querySelector('.t7-images-button');
+    const imageHeight = el.querySelector('.t7-images-height');
+    imageMode.value = images.mode;
+    imageButton.checked = images.button;
+    imageHeight.value = images.height;
+    imageMode.onchange = () => setImagePrefs({ mode: imageMode.value });
+    imageButton.onchange = () => setImagePrefs({ button: imageButton.checked });
+    imageHeight.onchange = () => { setImagePrefs({ height: imageHeight.value }); imageHeight.value = imagePrefs().height; };
     pastesEnabled.checked = arePastesEnabled();
     pastesEnabled.addEventListener('change', () => setPastesEnabled(pastesEnabled.checked));
 

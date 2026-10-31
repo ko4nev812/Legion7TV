@@ -37,6 +37,7 @@ function initialize() {
     pingSystem.applyPingColor();
     applyChatFont();
     initEmoteTooltip();
+    document.addEventListener('t7-images-change', rescanAll);
 
     startChatObservers();
     ensureButtons();

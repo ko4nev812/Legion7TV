@@ -2,7 +2,7 @@
 // @author       ProCto_Fliy
 // @name         Legion chat extentions (7TV, более удобный чат и тд)
 // @namespace    https://play.multidonate.ru/
-// @version      4.9.0
+// @version      4.10.0
 // @description  Эмоуты 7TV в чате: кнопка 7TV, ник стримера, размер, список эмоутов, быстрый кеш
 // @match        https://play.multidonate.ru/*
 // @icon         https://cdn.7tv.app/emote/01F71VQYHR000D3ZZ6Q11NR7TV/2x.webp
@@ -18,10 +18,12 @@
 // @connect      cdn.7tv.app
 // @connect      api.ivr.fi
 // @connect      workers.dev
+// @connect      ibb.co
+// @connect      i.ibb.co
 // @license      MIT
 // ==/UserScript==
 (() => {
-  var styles_default = '.t7-w{display:inline-block;position:relative;vertical-align:middle;line-height:0}\n.t7-e {\n    display: inline-block;\n    vertical-align: middle;\n    height: var(--t7-h, 1.9em);\n    width: auto;\n    min-width: var(--t7-h, 1.9em);\n    \n    aspect-ratio: auto; \n}\n.t7-zw{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%;width:auto;pointer-events:none}\n.t7-e:not([src]),.t7-zw:not([src]){visibility:hidden}\n.t7-tip{position:fixed;z-index:2147483200;display:flex;flex-direction:column;align-items:center;width:min(210px,calc(100vw - 16px));overflow:hidden;border-radius:4px;background:#000;color:#efeff1;box-shadow:0 5px 20px rgba(0,0,0,.35);font:14px/1.3 Arial,sans-serif;text-align:center;pointer-events:none}\n.t7-tip[hidden]{display:none!important}\n.t7-tip-preview{display:grid;place-items:center;width:100%;height:132px;background:#000}\n.t7-tip-preview img{max-width:100%;max-height:100%;object-fit:contain}\n.t7-tip-preview img.t7-tip-loading{visibility:hidden}\n.t7-tip-info{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;padding:10px 8px 8px;overflow-wrap:anywhere}\n.t7-tip-name{display:flex;align-items:center;justify-content:center;gap:6px;font-size:17px;font-weight:700}\n.t7-tip-logo{display:inline-grid;place-items:center;width:25px;height:20px;border-radius:3px;background:#111;color:#fff;font:bold 10px/1 Arial,sans-serif}\n.t7-tip-author{font-size:16px}\n.t7-tip-author span{color:#e89a00}\n.t7-tip-type{font-size:16px;font-weight:700}\nform.cy-chat-f .t7-btn{\n    flex:none;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;\n    box-sizing:border-box;width:auto;height:auto;min-height:28px;margin:0 0 0 4px;padding:0 8px;\n    border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(145,70,255,.9);color:#fff;\n    font:700 11px/1 system-ui,sans-serif;letter-spacing:0;text-indent:0;text-transform:none;\n    white-space:nowrap;vertical-align:middle;cursor:pointer}\nform.cy-chat-f .t7-btn:hover{background:rgb(165,100,255)}\nform.dm-f .t7-pastes-btn{flex:none;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:auto;height:auto;min-height:28px;margin:0 0 0 4px;padding:0 8px;border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(145,70,255,.9);color:#fff;font:700 11px/1 system-ui,sans-serif;white-space:nowrap;cursor:pointer}\nform.dm-f .t7-pastes-btn:hover{background:rgb(165,100,255)}\nform.cy-chat-f .t7-pastes-btn[hidden],form.dm-f .t7-pastes-btn[hidden]{display:none!important}\nform.cy-chat-f{position:relative}\nform.cy-chat-f>.t7-ping-menu{position:absolute;left:auto;right:0;bottom:calc(100% + 5px);z-index:20;display:flex;flex-direction:column;width:min(210px,calc(100vw - 24px));max-height:132px;overflow-y:auto;padding:3px;border:1px solid rgba(255,255,255,.16);border-radius:6px;background:rgba(24,24,32,.88);box-shadow:0 5px 14px rgba(0,0,0,.28);backdrop-filter:blur(5px)}\nform.cy-chat-f>.t7-ping-menu[hidden]{display:none}\nform.cy-chat-f>.t7-ping-menu>.t7-ping-option{display:block;flex:none;width:100%;min-width:0;min-height:0;height:auto;margin:0;padding:4px 8px;border:0;border-radius:4px;background:transparent;color:#eee;text-align:left;text-transform:none;font:12px/1.25 system-ui,sans-serif;box-shadow:none}\nform.cy-chat-f>.t7-ping-menu>.t7-ping-option:hover,form.cy-chat-f>.t7-ping-menu>.t7-ping-option:focus-visible{background:rgba(255,255,255,.12);color:#fff;outline:none}\nform.cy-chat-f>.t7-banword-warning{position:absolute;left:0;right:0;bottom:calc(100% + 5px);z-index:21;padding:7px 9px;border:1px solid rgba(255,201,77,.38);border-left:3px solid #ffc94d;border-radius:4px;background:rgba(24,24,32,.96);color:#f2dda0;font:12px/1.35 system-ui,sans-serif;box-shadow:0 5px 14px rgba(0,0,0,.28)}\nform.cy-chat-f>.t7-banword-warning[hidden]{display:none}\n.t7-paste-overlay{position:fixed;inset:0;z-index:2147483100;display:grid;place-items:center;padding:12px;background:rgba(0,0,0,.58);font:13px/1.35 system-ui,sans-serif}\n.t7-paste-dialog{display:flex;flex-direction:column;gap:10px;width:min(440px,100%);max-height:min(620px,90vh);overflow-y:auto;padding:12px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#1b1b24;color:#eee;box-shadow:0 10px 32px rgba(0,0,0,.48)}\n.t7-paste-header,.t7-paste-row,.t7-paste-actions{display:flex;align-items:center;gap:6px}\n.t7-paste-header{justify-content:space-between;font-size:15px}\n.t7-paste-list{display:flex;flex-direction:column;gap:4px;min-height:36px;overflow-y:auto}\n.t7-paste-item,.t7-paste-edit,.t7-paste-delete,.t7-paste-close,.t7-paste-primary,.t7-paste-secondary{border:1px solid rgba(255,255,255,.18);border-radius:4px;background:#101018;color:#eee;cursor:pointer}\n.t7-paste-item{flex:1;min-width:0;padding:7px 9px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.t7-paste-item:hover,.t7-paste-edit:hover,.t7-paste-delete:hover,.t7-paste-close:hover,.t7-paste-secondary:hover{background:#292936}\n.t7-paste-edit,.t7-paste-delete,.t7-paste-close{display:grid;place-items:center;flex:none;width:30px;height:30px;padding:0}\n.t7-paste-edit{font-size:16px}\n.t7-paste-delete,.t7-paste-close{font-size:20px}\n.t7-paste-add,.t7-paste-primary,.t7-paste-secondary{padding:7px 10px}\n.t7-paste-primary{border-color:#7650c9;background:#6844b5;color:#fff}\n.t7-paste-primary:hover{background:#7954c5}\n.t7-paste-editor{display:flex;flex-direction:column;gap:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12)}\n.t7-paste-editor[hidden],.t7-paste-add[hidden],.t7-paste-list[hidden]{display:none}\n.t7-paste-field{display:flex;flex-direction:column;gap:4px;color:#bbb;font-size:12px}\n.t7-paste-field input,.t7-paste-field textarea{box-sizing:border-box;width:100%;padding:7px 8px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:#101018;color:#fff;font:13px/1.35 system-ui,sans-serif}\n.t7-paste-field textarea{min-height:100px;resize:vertical}\n.t7-paste-actions{justify-content:flex-end}\n.t7-paste-empty{padding:10px 4px;color:#aaa;text-align:center}\n.t7-pop,.t7-set{\n    --t7-bg:#1b1b24;--t7-bg-in:#0f0f15;--t7-fg:#eee;--t7-mute:#aaa;\n    --t7-line:rgba(255,255,255,.2);--t7-hover:rgba(255,255,255,.14);--t7-acc:#9146ff}\n.t7-pop *,.t7-set *{box-sizing:border-box}\n.t7-pop button,.t7-sw button{font:inherit;cursor:pointer}\n.t7-pop [hidden]{display:none!important}\n.t7-x,.t7-g{display:grid;place-items:center;flex:none;width:40px;height:40px;padding:0;background:none;border:0;color:#ccc;line-height:1;border-radius:6px}\n.t7-x{font-size:36px}\n.t7-g{font-size:29px}\n.t7-x:hover,.t7-g:hover{background:var(--t7-hover);color:#fff}\n.t7-pop{\n    position:fixed;z-index:2147483000;display:flex;flex-direction:column;gap:8px;\n    padding:10px;background:var(--t7-bg);color:var(--t7-fg);\n    border:1px solid rgba(255,255,255,.18);border-radius:10px;\n    box-shadow:0 8px 28px rgba(0,0,0,.55);font:13px/1.3 system-ui,sans-serif}\n.t7-pop.t7-drag{will-change:transform;transition:none}\n.t7-pop.t7-drag .t7-gr{pointer-events:none}\n.t7-h,.t7-sth{display:flex;justify-content:space-between;align-items:center;\n    font-size:15px;cursor:grab;touch-action:none;user-select:none}\n.t7-h:active,.t7-sth:active{cursor:grabbing}\n.t7-hb{display:flex;align-items:center;gap:2px}\n.t7-pop input[type=search]{\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\n.t7-views{display:flex;gap:3px;padding:2px;border:1px solid var(--t7-line);border-radius:6px;background:var(--t7-bg-in)}\n.t7-views button{flex:1;padding:5px 7px;border:0;border-radius:4px;background:transparent;color:var(--t7-mute);font-size:12px}\n.t7-views button[aria-selected=true]{background:var(--t7-hover);color:var(--t7-fg)}\n.t7-gr{flex:1;min-height:156px;overflow-y:auto;overscroll-behavior:contain}\n.t7-sh{margin:6px 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--t7-mute)}\n.t7-gw{display:flex;flex-wrap:wrap;gap:2px}\n.t7-it{display:inline-flex;align-items:center;justify-content:center;\n    width:var(--t7-tile,40px);height:var(--t7-tile,40px);padding:3px;border:0;border-radius:6px;background:transparent}\n.t7-it:hover,.t7-it:focus-visible{background:var(--t7-hover)}\n.t7-it img{width:100%;height:100%;object-fit:contain}\n.t7-item{position:relative;flex:none;width:var(--t7-tile,40px);height:var(--t7-tile,40px)}\n.t7-item .t7-it{width:100%;height:100%}\n.t7-fav{position:absolute;top:0;right:0;z-index:1;display:grid;place-items:center;width:17px;height:17px;padding:0;border:0;border-radius:4px;background:rgba(15,15,21,.82);color:#e5c76b;font:14px/1 system-ui,sans-serif;opacity:.78}\n.t7-fav:hover,.t7-fav:focus-visible{opacity:1;background:var(--t7-hover)}\n.t7-emp{padding:16px 4px;color:var(--t7-mute);text-align:center}\n.t7-rs{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;\n    border-radius:0 0 10px 0;\n    background:linear-gradient(135deg,transparent 0 55%,#888 55% 62%,transparent 62% 72%,#888 72% 79%,transparent 79%)}\n.t7-set{\n    position:fixed;inset:0;z-index:2147483200;display:flex;align-items:center;justify-content:center;\n    padding:12px;background:rgba(0,0,0,.5);font:13px/1.3 system-ui,sans-serif}\n.t7-sw{\n    width:380px;max-width:100%;max-height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:8px;\n    padding:14px;background:var(--t7-bg);color:var(--t7-fg);\n    border:1px solid rgba(255,255,255,.18);border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.6)}\n.t7-sw.t7-drag{will-change:transform}\n.t7-sec{display:flex;flex-direction:column;gap:6px;padding:0 0 6px;border-bottom:1px solid rgba(255,255,255,.1);interpolate-size:allow-keywords}\n.t7-sec:last-of-type{padding-bottom:0;border-bottom:0}\n.t7-sec>summary{display:flex;align-items:center;justify-content:flex-start;gap:9px;min-height:32px;padding:0 2px;list-style:none;color:#c8c8d0;font-size:12px;font-weight:600;text-transform:none;cursor:pointer;user-select:none}\n.t7-sec>summary::-webkit-details-marker{display:none}\n.t7-sec>summary::before{content:"";flex:none;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform 180ms ease,color 180ms ease}\n.t7-sec>summary:hover,.t7-sec[open]>summary{color:#fff}\n.t7-sec>summary:focus-visible{outline:2px solid rgba(255,201,77,.75);outline-offset:2px}\n.t7-sec[open]>summary::before{transform:rotate(45deg)}\n.t7-sec>summary~*{margin-left:15px}\n.t7-sec::details-content{block-size:0;overflow:clip;opacity:0;transition:block-size 220ms ease,opacity 180ms ease,content-visibility 220ms allow-discrete}\n.t7-sec[open]::details-content{block-size:auto;opacity:1}\n@media(prefers-reduced-motion:reduce){.t7-sec::details-content,.t7-sec>summary::after{transition:none}}\n.t7-row{display:flex;gap:6px;align-items:flex-end}\n.t7-wrap{flex-wrap:wrap}\n.t7-fl{flex:1;display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--t7-mute)}\n.t7-chk{display:flex;gap:8px;align-items:center;cursor:pointer}\n.t7-sst{min-height:1.3em;font-size:11px;color:var(--t7-mute)}\n.t7-note{display:flex;align-items:center;gap:8px;margin:0;padding:8px 10px;border:1px solid rgba(255,201,77,.3);border-left:3px solid #ffc94d;border-radius:4px;background:rgba(255,201,77,.08);color:#e8d6a4;font-size:12px;line-height:1.35}\n.t7-note-icon{display:grid;place-items:center;flex:none;width:18px;height:18px;border-radius:50%;background:rgba(255,201,77,.18);color:#ffc94d;font-size:12px;font-weight:700}\n.t7-sw input[type=text],.t7-sw input[type=number]{\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\n.t7-sw textarea,.t7-sw select{\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\n.t7-sw textarea{resize:vertical;min-height:44px}\n.t7-volume{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px}\n.t7-volume input{grid-column:1/-1;width:100%;margin:2px 0}\n.t7-volume output,.t7-ping-status{font-size:11px;color:var(--t7-mute)}\n.t7-ping-status{min-height:1.3em}\n.t7-ping-color-control input{width:38px;height:30px;padding:2px;border:1px solid var(--t7-line);border-radius:5px;background:var(--t7-bg-in);cursor:pointer}\n.t7-chat-font-control{min-width:0;width:100%}\n.t7-chat-font-control select{box-sizing:border-box;min-width:0;max-width:100%}\n.t7-chat-font-size-control{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px}\n.t7-chat-font-size-control input{grid-column:1/-1;width:100%;margin:2px 0;accent-color:var(--t7-acc)}\n.t7-chat-font-size-control output{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}\n.t7-chat-font-actions{min-width:0;align-items:center}\n.t7-chat-font-actions .t7-b{flex:1 1 130px;min-width:0;white-space:normal}\n.t7-chat-font-actions .t7-b:disabled{opacity:.45;cursor:default}\n.t7-chat-font-status{overflow-wrap:anywhere}\n.t7-b{padding:6px 10px;border-radius:6px;border:1px solid var(--t7-line);background:var(--t7-bg-in);color:#ddd}\n.t7-b:hover{background:#1d1d29}\n.t7-b.p{background:var(--t7-acc);border-color:var(--t7-acc);color:#fff}\n.t7-szb{display:flex;gap:4px}\n.t7-szb button{min-width:34px;padding:4px 8px;border-radius:6px;border:1px solid var(--t7-line);background:var(--t7-bg-in);color:#ddd}\n.t7-szb button[aria-pressed=true]{background:var(--t7-acc);border-color:var(--t7-acc);color:#fff}\n.t7-chat-tab-list{display:flex;flex-direction:column;gap:3px}\n.t7-chat-tab-row{display:flex;align-items:center;gap:8px;min-height:32px;padding:2px 0}\n.t7-chat-tab-name{flex:1;min-width:0;font-size:12px;color:var(--t7-fg)}\n.t7-chat-tab-visible{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--t7-mute);white-space:nowrap;cursor:pointer}\n.t7-chat-tab-visible input{margin:0;accent-color:#ffc94d}\n.t7-chat-tab-move{display:inline-flex;gap:3px}\n.t7-chat-tab-move button{display:grid;place-items:center;width:28px;height:28px;padding:0;border:1px solid var(--t7-line);border-radius:4px;background:var(--t7-bg-in);color:#ddd}\n.t7-chat-tab-move button:disabled{opacity:.35;cursor:default}\n.cy-chat-tabs:not([hidden]){\n    display:flex;flex-wrap:nowrap;gap:2px;width:100%;max-width:100%;min-width:0;box-sizing:border-box;\n    overflow-x:auto;overflow-y:hidden;scrollbar-width:none}\n.cy-chat-tabs::-webkit-scrollbar{display:none}\n.cy-chat-tabs>button[data-tab]{\n    flex:0 0 auto;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:3px;\n    padding:5px 6px;font-size:11px;line-height:1.2;white-space:nowrap;overflow:visible}\n.cy-chat-tabs>button .cy-chat-tn{flex:none;margin:0;min-width:1.5em;padding:1px 4px;line-height:1.3;text-align:center;overflow:visible}\n.cy-chat-h .t7-chat-filter{display:inline-flex;align-items:center;gap:4px;margin-left:auto;padding:3px 5px;border-radius:4px;font:11px/1.2 system-ui,sans-serif;white-space:nowrap;cursor:pointer;user-select:none}\n.cy-chat-h .t7-chat-filter input{width:13px;height:13px;margin:0;accent-color:#ffc94d;flex:none}\n.cy-chat-h .t7-chat-filter span{white-space:nowrap}\n.cy-chat-h .t7-ping-nav{display:inline-flex;align-items:center;gap:2px;margin-left:4px}\n.cy-chat-h .t7-ping-nav[hidden]{display:none!important}\n.cy-chat-h .t7-ping-nav button{display:grid;place-items:center;width:22px;height:22px;padding:0;border:1px solid rgba(255,255,255,.16);border-radius:3px;background:transparent;color:inherit;font:16px/1 system-ui,sans-serif;cursor:pointer}\n.cy-chat-h .t7-ping-nav button:disabled{opacity:.35;cursor:default}\n.cy-chat .cy-chat-n,\n.cy-chat .cy-chat-tn,\n.cy-chat .cy-chat-tp,\n.cy-chat .cy-chat-pn{\n    flex:none;display:inline-block;box-sizing:border-box;min-width:18px;height:18px;margin:0 0 0 4px;padding:0 5px;\n    border-radius:9px;font:700 11px/18px system-ui,sans-serif;text-align:center;text-indent:0;overflow:visible}\n.cy-chat .cy-chat-n,\n.cy-chat .cy-chat-tn{background:#e53935;color:#fff}\n.cy-chat .cy-chat-tp,\n.cy-chat .cy-chat-pn{background:#ffc94d;color:#1b1b24}\n.cy-chat .cy-chat-n[hidden],\n.cy-chat .cy-chat-tn[hidden],\n.cy-chat .cy-chat-tp[hidden],\n.cy-chat .cy-chat-pn[hidden]{display:none!important}\n.cy-chat-l>li.t7-ping-hidden{display:none!important}\n.cy-chat-l[data-t7-no-pings="true"]:after{display:block;padding:12px 6px;color:#aaa;font:12px/1.4 system-ui,sans-serif;text-align:center;content:"\u041F\u0438\u043D\u0433\u043E\u0432 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442"}\n.cy-chat-l,.cy-chat-dmx .dm-l{font-family:var(--t7-chat-font,inherit);font-size:var(--t7-chat-font-size,inherit)}\n.t7-mention{color:var(--t7-ping-color,#e89aa3);font-weight:600}\n.cy-chat-l>li.t7-filtered{font-style:italic}\n.cy-chat-l>li>.t7-filter-label{display:inline-block;margin-right:5px;padding:2px 6px;border-radius:4px;background:rgba(255,201,77,.14);color:#ffca66;font-size:13px;font-weight:700;white-space:nowrap}\n.cy-chat-l>li.t7-filtered>:not(.t7-filter-label){display:none!important}\n.cy-chat-l,.cy-chat-l li,.cy-chat-l li span,.cy-chat-l li a{-webkit-user-select:text!important;user-select:text!important}\n.cy-chat-l a.t7-link{color:#8edbff;text-decoration:underline;text-underline-offset:2px;cursor:pointer}\n.cy-chat-tabs>button[data-tab][hidden]{display:none!important}\n.cy-chat-dmx, .cy-chat-l {\n  overflow-anchor: auto;\n}\n.cy-chat-dmx img.t7-e {\n  content-visibility: auto;\n}\nform.cy-chat-f .t7-btn, form.dm-f .t7-btn{\n    flex:none;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;\n    box-sizing:border-box;width:auto;height:auto;min-height:28px;margin:0 0 0 4px;padding:0 8px;\n    border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(145,70,255,.9);color:#fff;\n    font:700 11px/1 system-ui,sans-serif;letter-spacing:0;text-indent:0;text-transform:none;\n    white-space:nowrap;vertical-align:middle;cursor:pointer}\nform.cy-chat-f .t7-btn:hover, form.dm-f .t7-btn:hover{background:rgb(165,100,255)}\nform.dm-f{position:relative}';
+  var styles_default = '.t7-w{display:inline-block;position:relative;vertical-align:middle;line-height:0}\n.t7-e {\n    display: inline-block;\n    vertical-align: middle;\n    height: var(--t7-h, 1.9em);\n    width: auto;\n    min-width: var(--t7-h, 1.9em);\n    \n    aspect-ratio: auto; \n}\n.t7-zw{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%;width:auto;pointer-events:none}\n.t7-e:not([src]),.t7-zw:not([src]){visibility:hidden}\n.t7-tip{position:fixed;z-index:2147483200;display:flex;flex-direction:column;align-items:center;width:min(210px,calc(100vw - 16px));overflow:hidden;border-radius:4px;background:#000;color:#efeff1;box-shadow:0 5px 20px rgba(0,0,0,.35);font:14px/1.3 Arial,sans-serif;text-align:center;pointer-events:none}\n.t7-tip[hidden]{display:none!important}\n.t7-tip-preview{display:grid;place-items:center;width:100%;height:132px;background:#000}\n.t7-tip-preview img{max-width:100%;max-height:100%;object-fit:contain}\n.t7-tip-preview img.t7-tip-loading{visibility:hidden}\n.t7-tip-info{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;padding:10px 8px 8px;overflow-wrap:anywhere}\n.t7-tip-name{display:flex;align-items:center;justify-content:center;gap:6px;font-size:17px;font-weight:700}\n.t7-tip-logo{display:inline-grid;place-items:center;width:25px;height:20px;border-radius:3px;background:#111;color:#fff;font:bold 10px/1 Arial,sans-serif}\n.t7-tip-author{font-size:16px}\n.t7-tip-author span{color:#e89a00}\n.t7-tip-type{font-size:16px;font-weight:700}\nform.cy-chat-f .t7-btn{\n    flex:none;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;\n    box-sizing:border-box;width:auto;height:auto;min-height:28px;margin:0 0 0 4px;padding:0 8px;\n    border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(145,70,255,.9);color:#fff;\n    font:700 11px/1 system-ui,sans-serif;letter-spacing:0;text-indent:0;text-transform:none;\n    white-space:nowrap;vertical-align:middle;cursor:pointer}\nform.cy-chat-f .t7-btn:hover{background:rgb(165,100,255)}\nform.dm-f .t7-pastes-btn{flex:none;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:auto;height:auto;min-height:28px;margin:0 0 0 4px;padding:0 8px;border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(145,70,255,.9);color:#fff;font:700 11px/1 system-ui,sans-serif;white-space:nowrap;cursor:pointer}\nform.dm-f .t7-pastes-btn:hover{background:rgb(165,100,255)}\nform.cy-chat-f .t7-pastes-btn[hidden],form.dm-f .t7-pastes-btn[hidden]{display:none!important}\nform.cy-chat-f{position:relative}\nform.cy-chat-f>.t7-ping-menu{position:absolute;left:auto;right:0;bottom:calc(100% + 5px);z-index:20;display:flex;flex-direction:column;width:min(210px,calc(100vw - 24px));max-height:132px;overflow-y:auto;padding:3px;border:1px solid rgba(255,255,255,.16);border-radius:6px;background:rgba(24,24,32,.88);box-shadow:0 5px 14px rgba(0,0,0,.28);backdrop-filter:blur(5px)}\nform.cy-chat-f>.t7-ping-menu[hidden]{display:none}\nform.cy-chat-f>.t7-ping-menu>.t7-ping-option{display:block;flex:none;width:100%;min-width:0;min-height:0;height:auto;margin:0;padding:4px 8px;border:0;border-radius:4px;background:transparent;color:#eee;text-align:left;text-transform:none;font:12px/1.25 system-ui,sans-serif;box-shadow:none}\nform.cy-chat-f>.t7-ping-menu>.t7-ping-option:hover,form.cy-chat-f>.t7-ping-menu>.t7-ping-option:focus-visible{background:rgba(255,255,255,.12);color:#fff;outline:none}\nform.cy-chat-f>.t7-banword-warning{position:absolute;left:0;right:0;bottom:calc(100% + 5px);z-index:21;padding:7px 9px;border:1px solid rgba(255,201,77,.38);border-left:3px solid #ffc94d;border-radius:4px;background:rgba(24,24,32,.96);color:#f2dda0;font:12px/1.35 system-ui,sans-serif;box-shadow:0 5px 14px rgba(0,0,0,.28)}\nform.cy-chat-f>.t7-banword-warning[hidden]{display:none}\n.t7-paste-overlay{position:fixed;inset:0;z-index:2147483100;display:grid;place-items:center;padding:12px;background:rgba(0,0,0,.58);font:13px/1.35 system-ui,sans-serif}\n.t7-paste-dialog{display:flex;flex-direction:column;gap:10px;width:min(440px,100%);max-height:min(620px,90vh);overflow-y:auto;padding:12px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#1b1b24;color:#eee;box-shadow:0 10px 32px rgba(0,0,0,.48)}\n.t7-paste-header,.t7-paste-row,.t7-paste-actions{display:flex;align-items:center;gap:6px}\n.t7-paste-header{justify-content:space-between;font-size:15px}\n.t7-paste-list{display:flex;flex-direction:column;gap:4px;min-height:36px;overflow-y:auto}\n.t7-paste-item,.t7-paste-edit,.t7-paste-delete,.t7-paste-close,.t7-paste-primary,.t7-paste-secondary{border:1px solid rgba(255,255,255,.18);border-radius:4px;background:#101018;color:#eee;cursor:pointer}\n.t7-paste-item{flex:1;min-width:0;padding:7px 9px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.t7-paste-item:hover,.t7-paste-edit:hover,.t7-paste-delete:hover,.t7-paste-close:hover,.t7-paste-secondary:hover{background:#292936}\n.t7-paste-edit,.t7-paste-delete,.t7-paste-close{display:grid;place-items:center;flex:none;width:30px;height:30px;padding:0}\n.t7-paste-edit{font-size:16px}\n.t7-paste-delete,.t7-paste-close{font-size:20px}\n.t7-paste-add,.t7-paste-primary,.t7-paste-secondary{padding:7px 10px}\n.t7-paste-primary{border-color:#7650c9;background:#6844b5;color:#fff}\n.t7-paste-primary:hover{background:#7954c5}\n.t7-paste-editor{display:flex;flex-direction:column;gap:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12)}\n.t7-paste-editor[hidden],.t7-paste-add[hidden],.t7-paste-list[hidden]{display:none}\n.t7-paste-field{display:flex;flex-direction:column;gap:4px;color:#bbb;font-size:12px}\n.t7-paste-field input,.t7-paste-field textarea{box-sizing:border-box;width:100%;padding:7px 8px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:#101018;color:#fff;font:13px/1.35 system-ui,sans-serif}\n.t7-paste-field textarea{min-height:100px;resize:vertical}\n.t7-paste-actions{justify-content:flex-end}\n.t7-paste-empty{padding:10px 4px;color:#aaa;text-align:center}\n.t7-pop,.t7-set{\n    --t7-bg:#1b1b24;--t7-bg-in:#0f0f15;--t7-fg:#eee;--t7-mute:#aaa;\n    --t7-line:rgba(255,255,255,.2);--t7-hover:rgba(255,255,255,.14);--t7-acc:#9146ff}\n.t7-pop *,.t7-set *{box-sizing:border-box}\n.t7-pop button,.t7-sw button{font:inherit;cursor:pointer}\n.t7-pop [hidden]{display:none!important}\n.t7-x,.t7-g{display:grid;place-items:center;flex:none;width:40px;height:40px;padding:0;background:none;border:0;color:#ccc;line-height:1;border-radius:6px}\n.t7-x{font-size:36px}\n.t7-g{font-size:29px}\n.t7-x:hover,.t7-g:hover{background:var(--t7-hover);color:#fff}\n.t7-pop{\n    position:fixed;z-index:2147483000;display:flex;flex-direction:column;gap:8px;\n    padding:10px;background:var(--t7-bg);color:var(--t7-fg);\n    border:1px solid rgba(255,255,255,.18);border-radius:10px;\n    box-shadow:0 8px 28px rgba(0,0,0,.55);font:13px/1.3 system-ui,sans-serif}\n.t7-pop.t7-drag{will-change:transform;transition:none}\n.t7-pop.t7-drag .t7-gr{pointer-events:none}\n.t7-h,.t7-sth{display:flex;justify-content:space-between;align-items:center;\n    font-size:15px;cursor:grab;touch-action:none;user-select:none}\n.t7-h:active,.t7-sth:active{cursor:grabbing}\n.t7-hb{display:flex;align-items:center;gap:2px}\n.t7-pop input[type=search]{\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\n.t7-views{display:flex;gap:3px;padding:2px;border:1px solid var(--t7-line);border-radius:6px;background:var(--t7-bg-in)}\n.t7-views button{flex:1;padding:5px 7px;border:0;border-radius:4px;background:transparent;color:var(--t7-mute);font-size:12px}\n.t7-views button[aria-selected=true]{background:var(--t7-hover);color:var(--t7-fg)}\n.t7-gr{flex:1;min-height:156px;overflow-y:auto;overscroll-behavior:contain}\n.t7-sh{margin:6px 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--t7-mute)}\n.t7-gw{display:flex;flex-wrap:wrap;gap:2px}\n.t7-it{display:inline-flex;align-items:center;justify-content:center;\n    width:var(--t7-tile,40px);height:var(--t7-tile,40px);padding:3px;border:0;border-radius:6px;background:transparent}\n.t7-it:hover,.t7-it:focus-visible{background:var(--t7-hover)}\n.t7-it img{width:100%;height:100%;object-fit:contain}\n.t7-item{position:relative;flex:none;width:var(--t7-tile,40px);height:var(--t7-tile,40px)}\n.t7-item .t7-it{width:100%;height:100%}\n.t7-fav{position:absolute;top:0;right:0;z-index:1;display:grid;place-items:center;width:17px;height:17px;padding:0;border:0;border-radius:4px;background:rgba(15,15,21,.82);color:#e5c76b;font:14px/1 system-ui,sans-serif;opacity:.78}\n.t7-fav:hover,.t7-fav:focus-visible{opacity:1;background:var(--t7-hover)}\n.t7-emp{padding:16px 4px;color:var(--t7-mute);text-align:center}\n.t7-rs{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;\n    border-radius:0 0 10px 0;\n    background:linear-gradient(135deg,transparent 0 55%,#888 55% 62%,transparent 62% 72%,#888 72% 79%,transparent 79%)}\n.t7-set{\n    position:fixed;inset:0;z-index:2147483200;display:flex;align-items:center;justify-content:center;\n    padding:12px;background:rgba(0,0,0,.5);font:13px/1.3 system-ui,sans-serif}\n.t7-sw{\n    width:380px;max-width:100%;max-height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:8px;\n    padding:14px;background:var(--t7-bg);color:var(--t7-fg);\n    border:1px solid rgba(255,255,255,.18);border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.6)}\n.t7-sw.t7-drag{will-change:transform}\n.t7-sec{display:flex;flex-direction:column;gap:6px;padding:0 0 6px;border-bottom:1px solid rgba(255,255,255,.1);interpolate-size:allow-keywords}\n.t7-sec:last-of-type{padding-bottom:0;border-bottom:0}\n.t7-sec>summary{display:flex;align-items:center;justify-content:flex-start;gap:9px;min-height:32px;padding:0 2px;list-style:none;color:#c8c8d0;font-size:12px;font-weight:600;text-transform:none;cursor:pointer;user-select:none}\n.t7-sec>summary::-webkit-details-marker{display:none}\n.t7-sec>summary::before{content:"";flex:none;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform 180ms ease,color 180ms ease}\n.t7-sec>summary:hover,.t7-sec[open]>summary{color:#fff}\n.t7-sec>summary:focus-visible{outline:2px solid rgba(255,201,77,.75);outline-offset:2px}\n.t7-sec[open]>summary::before{transform:rotate(45deg)}\n.t7-sec>summary~*{margin-left:15px}\n.t7-sec::details-content{block-size:0;overflow:clip;opacity:0;transition:block-size 220ms ease,opacity 180ms ease,content-visibility 220ms allow-discrete}\n.t7-sec[open]::details-content{block-size:auto;opacity:1}\n@media(prefers-reduced-motion:reduce){.t7-sec::details-content,.t7-sec>summary::after{transition:none}}\n.t7-row{display:flex;gap:6px;align-items:flex-end}\n.t7-wrap{flex-wrap:wrap}\n.t7-fl{flex:1;display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--t7-mute)}\n.t7-chk{display:flex;gap:8px;align-items:center;cursor:pointer}\n.t7-sst{min-height:1.3em;font-size:11px;color:var(--t7-mute)}\n.t7-note{display:flex;align-items:center;gap:8px;margin:0;padding:8px 10px;border:1px solid rgba(255,201,77,.3);border-left:3px solid #ffc94d;border-radius:4px;background:rgba(255,201,77,.08);color:#e8d6a4;font-size:12px;line-height:1.35}\n.t7-note-icon{display:grid;place-items:center;flex:none;width:18px;height:18px;border-radius:50%;background:rgba(255,201,77,.18);color:#ffc94d;font-size:12px;font-weight:700}\n.t7-sw input[type=text],.t7-sw input[type=number]{\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\n.t7-sw textarea,.t7-sw select{\n    width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--t7-line);\n    background:var(--t7-bg-in);color:#fff;font:13px system-ui,sans-serif}\n.t7-sw textarea{resize:vertical;min-height:44px}\n.t7-volume{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px}\n.t7-volume input{grid-column:1/-1;width:100%;margin:2px 0}\n.t7-volume output,.t7-ping-status{font-size:11px;color:var(--t7-mute)}\n.t7-ping-status{min-height:1.3em}\n.t7-ping-color-control input{width:38px;height:30px;padding:2px;border:1px solid var(--t7-line);border-radius:5px;background:var(--t7-bg-in);cursor:pointer}\n.t7-chat-font-control{min-width:0;width:100%}\n.t7-chat-font-control select{box-sizing:border-box;min-width:0;max-width:100%}\n.t7-chat-font-size-control{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px}\n.t7-chat-font-size-control input{grid-column:1/-1;width:100%;margin:2px 0;accent-color:var(--t7-acc)}\n.t7-chat-font-size-control output{min-width:42px;text-align:right;font-variant-numeric:tabular-nums}\n.t7-chat-font-actions{min-width:0;align-items:center}\n.t7-chat-font-actions .t7-b{flex:1 1 130px;min-width:0;white-space:normal}\n.t7-chat-font-actions .t7-b:disabled{opacity:.45;cursor:default}\n.t7-chat-font-status{overflow-wrap:anywhere}\n.t7-b{padding:6px 10px;border-radius:6px;border:1px solid var(--t7-line);background:var(--t7-bg-in);color:#ddd}\n.t7-b:hover{background:#1d1d29}\n.t7-b.p{background:var(--t7-acc);border-color:var(--t7-acc);color:#fff}\n.t7-szb{display:flex;gap:4px}\n.t7-szb button{min-width:34px;padding:4px 8px;border-radius:6px;border:1px solid var(--t7-line);background:var(--t7-bg-in);color:#ddd}\n.t7-szb button[aria-pressed=true]{background:var(--t7-acc);border-color:var(--t7-acc);color:#fff}\n.t7-chat-tab-list{display:flex;flex-direction:column;gap:3px}\n.t7-chat-tab-row{display:flex;align-items:center;gap:8px;min-height:32px;padding:2px 0}\n.t7-chat-tab-name{flex:1;min-width:0;font-size:12px;color:var(--t7-fg)}\n.t7-chat-tab-visible{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--t7-mute);white-space:nowrap;cursor:pointer}\n.t7-chat-tab-visible input{margin:0;accent-color:#ffc94d}\n.t7-chat-tab-move{display:inline-flex;gap:3px}\n.t7-chat-tab-move button{display:grid;place-items:center;width:28px;height:28px;padding:0;border:1px solid var(--t7-line);border-radius:4px;background:var(--t7-bg-in);color:#ddd}\n.t7-chat-tab-move button:disabled{opacity:.35;cursor:default}\n.cy-chat-tabs:not([hidden]){\n    display:flex;flex-wrap:nowrap;gap:2px;width:100%;max-width:100%;min-width:0;box-sizing:border-box;\n    overflow-x:auto;overflow-y:hidden;scrollbar-width:none}\n.cy-chat-tabs::-webkit-scrollbar{display:none}\n.cy-chat-tabs>button[data-tab]{\n    flex:0 0 auto;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:3px;\n    padding:5px 6px;font-size:11px;line-height:1.2;white-space:nowrap;overflow:visible}\n.cy-chat-tabs>button .cy-chat-tn{flex:none;margin:0;min-width:1.5em;padding:1px 4px;line-height:1.3;text-align:center;overflow:visible}\n.cy-chat-h .t7-chat-filter{display:inline-flex;align-items:center;gap:4px;margin-left:auto;padding:3px 5px;border-radius:4px;font:11px/1.2 system-ui,sans-serif;white-space:nowrap;cursor:pointer;user-select:none}\n.cy-chat-h .t7-chat-filter input{width:13px;height:13px;margin:0;accent-color:#ffc94d;flex:none}\n.cy-chat-h .t7-chat-filter span{white-space:nowrap}\n.cy-chat-h .t7-ping-nav{display:inline-flex;align-items:center;gap:2px;margin-left:4px}\n.cy-chat-h .t7-ping-nav[hidden]{display:none!important}\n.cy-chat-h .t7-ping-nav button{display:grid;place-items:center;width:22px;height:22px;padding:0;border:1px solid rgba(255,255,255,.16);border-radius:3px;background:transparent;color:inherit;font:16px/1 system-ui,sans-serif;cursor:pointer}\n.cy-chat-h .t7-ping-nav button:disabled{opacity:.35;cursor:default}\n.cy-chat .cy-chat-n,\n.cy-chat .cy-chat-tn,\n.cy-chat .cy-chat-tp,\n.cy-chat .cy-chat-pn{\n    flex:none;display:inline-block;box-sizing:border-box;min-width:18px;height:18px;margin:0 0 0 4px;padding:0 5px;\n    border-radius:9px;font:700 11px/18px system-ui,sans-serif;text-align:center;text-indent:0;overflow:visible}\n.cy-chat .cy-chat-n,\n.cy-chat .cy-chat-tn{background:#e53935;color:#fff}\n.cy-chat .cy-chat-tp,\n.cy-chat .cy-chat-pn{background:#ffc94d;color:#1b1b24}\n.cy-chat .cy-chat-n[hidden],\n.cy-chat .cy-chat-tn[hidden],\n.cy-chat .cy-chat-tp[hidden],\n.cy-chat .cy-chat-pn[hidden]{display:none!important}\n.cy-chat-l>li.t7-ping-hidden{display:none!important}\n.cy-chat-l[data-t7-no-pings="true"]:after{display:block;padding:12px 6px;color:#aaa;font:12px/1.4 system-ui,sans-serif;text-align:center;content:"\u041F\u0438\u043D\u0433\u043E\u0432 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442"}\n.cy-chat-l,.cy-chat-dmx .dm-l{font-family:var(--t7-chat-font,inherit);font-size:var(--t7-chat-font-size,inherit)}\n.t7-mention{color:var(--t7-ping-color,#e89aa3);font-weight:600}\n.cy-chat-l>li.t7-filtered{font-style:italic}\n.cy-chat-l>li>.t7-filter-label{display:inline-block;margin-right:5px;padding:2px 6px;border-radius:4px;background:rgba(255,201,77,.14);color:#ffca66;font-size:13px;font-weight:700;white-space:nowrap}\n.cy-chat-l>li.t7-filtered>:not(.t7-filter-label){display:none!important}\n.cy-chat-l,.cy-chat-l li,.cy-chat-l li span,.cy-chat-l li a{-webkit-user-select:text!important;user-select:text!important}\n.cy-chat-l a.t7-link{color:#8edbff;text-decoration:underline;text-underline-offset:2px;cursor:pointer}\n.cy-chat-tabs>button[data-tab][hidden]{display:none!important}\n.cy-chat-dmx, .cy-chat-l {\n  overflow-anchor: auto;\n}\n.cy-chat-dmx img.t7-e {\n  content-visibility: auto;\n}\nform.cy-chat-f .t7-btn, form.dm-f .t7-btn{\n    flex:none;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;\n    box-sizing:border-box;width:auto;height:auto;min-height:28px;margin:0 0 0 4px;padding:0 8px;\n    border:1px solid rgba(255,255,255,.25);border-radius:6px;background:rgba(145,70,255,.9);color:#fff;\n    font:700 11px/1 system-ui,sans-serif;letter-spacing:0;text-indent:0;text-transform:none;\n    white-space:nowrap;vertical-align:middle;cursor:pointer}\nform.cy-chat-f .t7-btn:hover, form.dm-f .t7-btn:hover{background:rgb(165,100,255)}\nform.dm-f{position:relative}\n.t7-images-btn[hidden]{display:none!important}\n.t7-image-card{display:inline-block;position:relative;width:min(100%,var(--t7-image-width,320px));max-width:100%;vertical-align:middle;line-height:normal}\n.t7-image-card>a{display:block;max-width:100%}\n.t7-image-card img{display:block;width:100%;height:auto;max-width:100%;max-height:var(--t7-image-height,250px);object-fit:contain;min-width:32px;min-height:24px}\n.t7-image-star{position:absolute;right:3px;top:3px;z-index:2;opacity:0;border:1px solid #777;border-radius:4px;padding:2px 5px;background:#111d;color:#ffce54;font:18px/1.2 system-ui;cursor:pointer}\n.t7-image-card:hover>.t7-image-star,.t7-image-card:focus-within>.t7-image-star{opacity:1}\n@media(hover:none){.t7-image-star{opacity:1}}\n.t7-image-error{color:#ff9d32!important;font:13px/1.4 system-ui,sans-serif}\n.t7-image-dialog{width:min(520px,100%);box-sizing:border-box;max-height:90vh;overflow:auto}\n.t7-image-url-row{display:flex;gap:6px;align-items:center}\n.t7-image-url-row>a{flex:none;background:#292936;border-radius:4px;color:#fff;padding:6px 10px;text-decoration:none}\n.t7-image-url{flex:1;min-width:0;padding:7px;border:1px solid #666;border-radius:4px;background:#101018;color:#eee;font:13px system-ui}\n.t7-image-preview{display:grid;place-items:center;background:#000;border-radius:4px}\n.t7-image-preview:empty{display:none}\n.t7-image-actions{display:flex;gap:6px}\n.t7-image-dialog button:disabled{opacity:.5;cursor:default}\n.t7-image-library{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;overflow:auto;min-height:60px}\n.t7-image-library-item{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:6px;padding:6px;background:#101018;border-radius:5px}\n.t7-image-library-item .t7-image-card img{max-height:120px}';
   var CACHE_TTL = 60 * 60 * 1e3;
   var SIZES = {
     s: { h: "1.3em", n: 2, p: 32, label: "S" },
@@ -613,6 +615,218 @@
     }
     content.replaceChildren(fragment);
   }
+  var ID = /^[a-zA-Z0-9]{1,32}$/;
+  var TOKEN = /\{img:([a-zA-Z0-9]{1,32})\}/g;
+  var URL_PATTERN = /(?<![\w@./-])(?:https?:\/\/)?(?:www\.)?ibb\.co\/([a-zA-Z0-9]{1,32})\/?(?![a-zA-Z0-9/_-]|\.[a-zA-Z0-9])(?:[?#][^\s<>"']*)?/gi;
+  var imagePrefs = () => {
+    const p = store.get("t7Images") || {};
+    return {
+      mode: ["off", "link", "image"].includes(p.mode) ? p.mode : "image",
+      button: p.button === true,
+      height: Math.max(60, Math.min(1e3, Number(p.height) || 250))
+    };
+  };
+  function setImagePrefs(value) {
+    store.set("t7Images", { ...imagePrefs(), ...value });
+    document.dispatchEvent(new Event("t7-images-change"));
+  }
+  function imageId(value) {
+    const token = /^\{img:([a-zA-Z0-9]{1,32})\}$/.exec(String(value).trim());
+    if (token) return token[1];
+    try {
+      const url = new URL(/^https?:\/\//i.test(value) ? value : "https://" + value);
+      const id = url.pathname.replace(/^\//, "").replace(/\/$/, "");
+      return ["ibb.co", "www.ibb.co"].includes(url.hostname) && ID.test(id) ? id : null;
+    } catch {
+      return null;
+    }
+  }
+  var encodeImageLinks = (text) => text.replace(URL_PATTERN, (_, id) => `{img:${id}}`);
+  var imageIds = (text) => [...new Set([...text.matchAll(TOKEN)].map((m) => m[1]))];
+  function savedImages(key) {
+    const ids = store.get("t7Images:" + key);
+    return Array.isArray(ids) ? [...new Set(ids.filter((id) => typeof id === "string" && ID.test(id)))] : [];
+  }
+  function rememberImages(text) {
+    const ids = imageIds(text);
+    if (!ids.length) return;
+    store.set("t7Images:recent", [...ids.reverse(), ...savedImages("recent").filter((id) => !ids.includes(id))].slice(0, 10));
+    document.dispatchEvent(new Event("t7-image-library-change"));
+  }
+  function toggleFavorite(id) {
+    const ids = savedImages("favorites");
+    store.set("t7Images:favorites", ids.includes(id) ? ids.filter((item) => item !== id) : [id, ...ids]);
+    document.dispatchEvent(new Event("t7-image-library-change"));
+  }
+  var requests = /* @__PURE__ */ new Map();
+  var waiting = [];
+  var active = 0;
+  function pump2() {
+    while (active < 4 && waiting.length) {
+      const job = waiting.shift();
+      active++;
+      job().finally(() => {
+        active--;
+        pump2();
+      });
+    }
+  }
+  function resolveImage(id) {
+    if (!ID.test(id)) return Promise.reject(new Error("\u041D\u0435\u0432\u0435\u0440\u043D\u0430\u044F \u0441\u0441\u044B\u043B\u043A\u0430"));
+    if (requests.has(id)) return requests.get(id);
+    const request = new Promise((resolve, reject) => {
+      waiting.push(() => new Promise((done) => {
+        const fail = () => {
+          reject(new Error("\u041E\u0448\u0438\u0431\u043A\u0430 imgBB"));
+          done();
+        };
+        try {
+          GM_xmlhttpRequest({
+            method: "GET",
+            url: "https://ibb.co/" + id,
+            timeout: 15e3,
+            onerror: fail,
+            ontimeout: fail,
+            onabort: fail,
+            onload(response) {
+              try {
+                if (response.status !== 200) throw new Error();
+                const page = new DOMParser().parseFromString(response.responseText, "text/html");
+                const candidates = [
+                  page.querySelector("#image-viewer-container img")?.getAttribute("src"),
+                  page.querySelector('link[rel="image_src"]')?.getAttribute("href"),
+                  page.querySelector('meta[property="og:image"]')?.getAttribute("content")
+                ];
+                const src = candidates.find((value) => {
+                  try {
+                    const u = new URL(value);
+                    return u.protocol === "https:" && u.hostname === "i.ibb.co";
+                  } catch {
+                    return false;
+                  }
+                });
+                if (!src) throw new Error();
+                resolve(src);
+                done();
+              } catch {
+                fail();
+              }
+            }
+          });
+        } catch {
+          fail();
+        }
+      }));
+      pump2();
+    });
+    requests.set(id, request);
+    request.catch(() => {
+      if (requests.get(id) === request) requests.delete(id);
+    });
+    return request;
+  }
+  function errorText(element, message) {
+    element.classList.add("t7-image-error");
+    element.textContent = String(message).slice(0, 20);
+  }
+  var lazyImages = /* @__PURE__ */ new WeakMap();
+  var observer;
+  function loadCard(card) {
+    const data = lazyImages.get(card);
+    if (!data) return;
+    lazyImages.delete(card);
+    const { id, image, stickFrom: stickFrom2 } = data;
+    resolveImage(id).then((src) => {
+      if (card.isConnected) image.src = src;
+    }, () => {
+      if (card.isConnected) {
+        errorText(card, "\u041E\u0448\u0438\u0431\u043A\u0430 imgBB");
+        stickFrom2(card);
+      }
+    });
+  }
+  function imageCard(id, stickFrom2 = () => {
+  }) {
+    const card = document.createElement("span");
+    card.className = "t7-image-card";
+    card.style.setProperty("--t7-image-height", imagePrefs().height + "px");
+    const link = document.createElement("a");
+    link.href = "https://ibb.co/" + id;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    const image = document.createElement("img");
+    image.alt = "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435 imgBB";
+    image.referrerPolicy = "no-referrer";
+    image.addEventListener("load", () => {
+      if (image.naturalHeight) card.style.setProperty("--t7-image-width", imagePrefs().height * image.naturalWidth / image.naturalHeight + "px");
+      stickFrom2(card);
+    });
+    image.addEventListener("error", () => {
+      errorText(card, "\u041E\u0448\u0438\u0431\u043A\u0430 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F");
+      stickFrom2(card);
+    });
+    link.append(image);
+    const star = document.createElement("button");
+    star.type = "button";
+    star.className = "t7-image-star";
+    const update = () => {
+      const saved = savedImages("favorites").includes(id);
+      star.textContent = saved ? "\u2605" : "\u2606";
+      star.title = saved ? "\u0423\u0431\u0440\u0430\u0442\u044C \u0438\u0437 \u0438\u0437\u0431\u0440\u0430\u043D\u043D\u043E\u0433\u043E" : "\u0412 \u0438\u0437\u0431\u0440\u0430\u043D\u043D\u043E\u0435";
+      star.setAttribute("aria-label", star.title);
+      star.setAttribute("aria-pressed", String(saved));
+    };
+    update();
+    star.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleFavorite(id);
+      update();
+    };
+    card.append(link, star);
+    lazyImages.set(card, { id, image, stickFrom: stickFrom2 });
+    if (!observer) observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.target.isConnected) {
+          observer.unobserve(entry.target);
+          lazyImages.delete(entry.target);
+        } else if (entry.isIntersecting) {
+          observer.unobserve(entry.target);
+          loadCard(entry.target);
+        }
+      }
+    }, { rootMargin: "100px" });
+    observer.observe(card);
+    return card;
+  }
+  function processImages({ content, kind, stickFrom: stickFrom2 }) {
+    const mode = imagePrefs().mode;
+    if (kind !== "message" || mode === "off") return;
+    const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) if (!walker.currentNode.parentElement.closest("a")) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      const matches = [...node.nodeValue.matchAll(TOKEN)];
+      if (!matches.length) continue;
+      const fragment = document.createDocumentFragment();
+      let offset = 0;
+      for (const match of matches) {
+        fragment.append(document.createTextNode(node.nodeValue.slice(offset, match.index)));
+        if (mode === "image") fragment.append(imageCard(match[1], stickFrom2));
+        else {
+          const link = document.createElement("a");
+          link.href = "https://ibb.co/" + match[1];
+          link.textContent = link.href;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          fragment.append(link);
+        }
+        offset = match.index + match[0].length;
+      }
+      fragment.append(document.createTextNode(node.nodeValue.slice(offset)));
+      node.replaceWith(fragment);
+    }
+  }
   var SAY_RE = /^\/api\/(?:chat\/say|city\/say|mine\/chat\/say|dm\/say)(?:\?|$)/;
   var LINK_ENCODING_KEY = STORE.linkEncoding;
   var isLinkEncodingEnabled = () => store.get(LINK_ENCODING_KEY) === true;
@@ -720,12 +934,17 @@
     linkifyText(content);
   }
   async function sendWithLinks(call, path, body) {
-    if (!isLinkEncodingEnabled()) return call(path, body);
     const text = body && body.text;
     if (typeof text !== "string") return call(path, body);
-    if (HTTP_RE.test(text)) return { ok: false, error: "\u0441\u0441\u044B\u043B\u043A\u0438 http:// \u043D\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0442\u0441\u044F - \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439 https://" };
-    const encoded = encodeLinks(text);
-    return call(path, encoded === text ? body : { ...body, text: encoded });
+    const imagesEnabled = imagePrefs().mode !== "off";
+    let encoded = imagesEnabled ? encodeImageLinks(text) : text;
+    if (isLinkEncodingEnabled()) {
+      if (HTTP_RE.test(encoded)) return { ok: false, error: "\u0441\u0441\u044B\u043B\u043A\u0438 http:// \u043D\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0442\u0441\u044F - \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439 https://" };
+      encoded = encodeLinks(encoded);
+    }
+    const result = await call(path, encoded === text ? body : { ...body, text: encoded });
+    if (imagesEnabled && result?.ok === true) rememberImages(encoded);
+    return result;
   }
   var MENTION_RE = /(?<![\p{L}\p{N}_])@[a-z0-9_]{1,25}(?![\p{L}\p{N}_])/giu;
   function processMentions({ content, kind }) {
@@ -761,6 +980,7 @@
   registerChatProcessor(processEmotes);
   registerChatProcessor(processLinks);
   registerChatProcessor(processMentions);
+  registerChatProcessor(processImages);
   var scrollStates = /* @__PURE__ */ new WeakMap();
   var scrollListSelector = `${SEL.chatList}, .dm-l`;
   function isAtEnd(list) {
@@ -1248,12 +1468,12 @@
     return store.get(PASTES_ENABLED_KEY) === true;
   }
   function setPastesEnabled(enabled) {
-    const active = !!enabled;
-    store.set(PASTES_ENABLED_KEY, active);
+    const active2 = !!enabled;
+    store.set(PASTES_ENABLED_KEY, active2);
     document.querySelectorAll(".t7-pastes-btn").forEach((button) => {
-      button.hidden = !active;
+      button.hidden = !active2;
     });
-    if (!active && closeActiveDialog) closeActiveDialog();
+    if (!active2 && closeActiveDialog) closeActiveDialog();
   }
   function readPastes() {
     const saved = store.get(PASTES_KEY);
@@ -1563,6 +1783,12 @@
                 <label class="t7-chk"><input type="checkbox" class="t7-pastes-enabled"> \u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u043A\u043D\u043E\u043F\u043A\u0443 \u043F\u0430\u0441\u0442 \u0432 \u0447\u0430\u0442\u0435</label>
             </details>
             <details class="t7-sec">
+                <summary>\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F imgBB</summary>
+                <label class="t7-fl">\u041E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435<select class="t7-images-mode"><option value="off">\u0412\u044B\u043A\u043B\u044E\u0447\u0435\u043D\u043E</option><option value="link">\u041A\u043B\u0438\u043A\u0430\u0431\u0435\u043B\u044C\u043D\u0430\u044F \u0441\u0441\u044B\u043B\u043A\u0430</option><option value="image">\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0430 / GIF</option></select></label>
+                <label class="t7-chk"><input type="checkbox" class="t7-images-button"> \u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u043A\u043D\u043E\u043F\u043A\u0443 imgBB \u0440\u044F\u0434\u043E\u043C \u0441 7TV</label>
+                <label class="t7-fl">\u041C\u0430\u043A\u0441\u0438\u043C\u0430\u043B\u044C\u043D\u0430\u044F \u0432\u044B\u0441\u043E\u0442\u0430 \u043A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 (px)<input type="number" class="t7-images-height" min="60" max="1000" step="10"></label>
+            </details>
+            <details class="t7-sec">
                 <summary>\u041D\u0435\u0434\u0430\u0432\u043D\u043E \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0435</summary>
                 <label class="t7-fl">\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u044D\u043C\u043E\u0443\u0442\u043E\u0432 \u0432 \u0441\u043F\u0438\u0441\u043A\u0435 "\u041D\u0435\u0434\u0430\u0432\u043D\u0438\u0435"<input class="t7-recent-limit" type="number" min="1" max="100" step="1" inputmode="numeric"></label>
             </details>
@@ -1616,6 +1842,19 @@
       rescanAll();
     });
     const pastesEnabled = el.querySelector(".t7-pastes-enabled");
+    const images = imagePrefs();
+    const imageMode = el.querySelector(".t7-images-mode");
+    const imageButton = el.querySelector(".t7-images-button");
+    const imageHeight = el.querySelector(".t7-images-height");
+    imageMode.value = images.mode;
+    imageButton.checked = images.button;
+    imageHeight.value = images.height;
+    imageMode.onchange = () => setImagePrefs({ mode: imageMode.value });
+    imageButton.onchange = () => setImagePrefs({ button: imageButton.checked });
+    imageHeight.onchange = () => {
+      setImagePrefs({ height: imageHeight.value });
+      imageHeight.value = imagePrefs().height;
+    };
     pastesEnabled.checked = arePastesEnabled();
     pastesEnabled.addEventListener("change", () => setPastesEnabled(pastesEnabled.checked));
     const nickInp = el.querySelector(".t7-nick");
@@ -1843,7 +2082,7 @@
       button.setAttribute("aria-selected", String(button.dataset.view === gridMode));
     });
   }
-  function toggleFavorite(name) {
+  function toggleFavorite2(name) {
     const favorites = readEntries(FAVORITES_KEY);
     const index = favorites.findIndex((item) => item.name === name);
     if (index >= 0) favorites.splice(index, 1);
@@ -2169,7 +2408,7 @@
     gr.addEventListener("click", (e) => {
       const favorite = e.target.closest(".t7-fav");
       if (favorite) {
-        toggleFavorite(favorite.dataset.name);
+        toggleFavorite2(favorite.dataset.name);
         return;
       }
       const b = e.target.closest(".t7-it");
@@ -2193,6 +2432,127 @@
       openPop(btn);
     }
   }
+  var closeActive = null;
+  function closeImagePicker() {
+    if (closeActive) closeActive();
+  }
+  function openImagePicker(input) {
+    if (!input || imagePrefs().mode === "off") return;
+    closeImagePicker();
+    const overlay = document.createElement("div");
+    overlay.className = "t7-paste-overlay";
+    const dialog = document.createElement("section");
+    dialog.className = "t7-paste-dialog t7-image-dialog";
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-label", "\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 imgBB");
+    dialog.innerHTML = `<div class="t7-paste-header"><b>\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 imgBB</b><button type="button" class="t7-paste-close" aria-label="\u0417\u0430\u043A\u0440\u044B\u0442\u044C">\xD7</button></div>
+        <div class="t7-image-url-row"><a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" title="\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u043D\u0430 imgBB" aria-label="\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u043D\u0430 imgBB">\u2197</a><input type="text" class="t7-image-url" placeholder="https://ibb.co/\u043A\u043E\u0434" aria-label="\u0421\u0441\u044B\u043B\u043A\u0430 imgBB"></div>
+        <div class="t7-image-preview" aria-live="polite"></div>
+        <div class="t7-image-actions"><button type="button" class="t7-b" data-action="insert" disabled>\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C</button><button type="button" class="t7-b" data-action="send" disabled>\u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C</button></div>
+        <div class="t7-views" role="tablist"><button type="button" role="tab" data-tab="recent" aria-selected="true">\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 10</button><button type="button" role="tab" data-tab="favorites" aria-selected="false">\u0418\u0437\u0431\u0440\u0430\u043D\u043D\u044B\u0435</button></div>
+        <div class="t7-image-library"></div>`;
+    overlay.append(dialog);
+    const url = dialog.querySelector(".t7-image-url");
+    const preview = dialog.querySelector(".t7-image-preview");
+    const library = dialog.querySelector(".t7-image-library");
+    let tab = "recent";
+    let selected = null;
+    const render = () => {
+      library.replaceChildren();
+      const ids = savedImages(tab);
+      if (!ids.length) library.textContent = tab === "recent" ? "\u041F\u043E\u043A\u0430 \u043D\u0435\u0442 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043D\u044B\u0445 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0439" : "\u0418\u0437\u0431\u0440\u0430\u043D\u043D\u044B\u0445 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0439 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442";
+      for (const id of ids) {
+        const item = document.createElement("div");
+        item.className = "t7-image-library-item";
+        const card = imageCard(id);
+        const choose = document.createElement("button");
+        choose.type = "button";
+        choose.className = "t7-b";
+        choose.textContent = "\u0412\u044B\u0431\u0440\u0430\u0442\u044C";
+        choose.onclick = () => {
+          url.value = "https://ibb.co/" + id;
+          updatePreview();
+        };
+        item.append(card, choose);
+        library.append(item);
+      }
+    };
+    const updatePreview = () => {
+      selected = imageId(url.value.trim());
+      preview.replaceChildren();
+      if (selected) preview.append(imageCard(selected));
+      else if (url.value.trim()) {
+        preview.textContent = "\u041D\u0435\u0432\u0435\u0440\u043D\u0430\u044F \u0441\u0441\u044B\u043B\u043A\u0430";
+        preview.classList.add("t7-image-error");
+      }
+      preview.classList.toggle("t7-image-error", !!url.value.trim() && !selected);
+      dialog.querySelectorAll("[data-action]").forEach((button) => {
+        button.disabled = !selected;
+      });
+    };
+    function close() {
+      overlay.remove();
+      document.removeEventListener("keydown", keydown, true);
+      document.removeEventListener("t7-image-library-change", render);
+      if (closeActive === close) closeActive = null;
+      if (input.isConnected) input.focus({ preventScroll: true });
+    }
+    const keydown = (event) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        close();
+      }
+    };
+    closeActive = close;
+    dialog.querySelector(".t7-paste-close").onclick = close;
+    overlay.addEventListener("pointerdown", (event) => {
+      if (event.target === overlay) close();
+    });
+    ["keydown", "keyup", "keypress"].forEach((name) => dialog.addEventListener(name, (event) => event.stopPropagation()));
+    url.addEventListener("input", updatePreview);
+    dialog.querySelectorAll("[data-tab]").forEach((button) => {
+      button.onclick = () => {
+        tab = button.dataset.tab;
+        dialog.querySelectorAll("[data-tab]").forEach((item) => item.setAttribute("aria-selected", String(item === button)));
+        render();
+      };
+    });
+    dialog.querySelectorAll("[data-action]").forEach((button) => {
+      button.onclick = () => {
+        if (!selected || input.disabled || !input.isConnected) return;
+        const form = input.closest("form");
+        const token = `{img:${selected}}`;
+        const start = input.selectionStart ?? input.value.length;
+        const end = input.selectionEnd ?? start;
+        const before = input.value.slice(0, start), after = input.value.slice(end);
+        const inserted = (before && !/\s$/.test(before) ? " " : "") + token + (after && !/^\s/.test(after) ? " " : "");
+        const value = before + inserted + after;
+        if (input.maxLength > 0 && value.length > input.maxLength) {
+          preview.textContent = "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435 \u0434\u043B\u0438\u043D\u043D\u043E\u0435";
+          preview.classList.add("t7-image-error");
+          return;
+        }
+        input.value = value;
+        input.setSelectionRange(start + inserted.length, start + inserted.length);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        close();
+        if (button.dataset.action === "send") form?.requestSubmit();
+      };
+    });
+    document.addEventListener("keydown", keydown, true);
+    document.addEventListener("t7-image-library-change", render);
+    document.body.append(overlay);
+    render();
+    url.focus();
+  }
+  document.addEventListener("t7-images-change", () => {
+    const prefs = imagePrefs();
+    document.querySelectorAll(".t7-images-btn").forEach((button) => {
+      button.hidden = !prefs.button || prefs.mode === "off";
+    });
+    closeImagePicker();
+  });
   var bindings = /* @__PURE__ */ new WeakMap();
   function normalizeBanword(value) {
     return String(value || "").normalize("NFKC").toLowerCase().replace(/\s+/gu, " ").trim();
@@ -2448,6 +2808,22 @@
         else form.appendChild(button);
       }
       let pastesButton = form.querySelector(".t7-pastes-btn");
+      if (!form.querySelector(".t7-images-btn")) {
+        const imagesButton = document.createElement("button");
+        imagesButton.type = "button";
+        imagesButton.className = "t7-btn t7-images-btn";
+        imagesButton.textContent = "imgBB";
+        imagesButton.title = "\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 imgBB";
+        imagesButton.setAttribute("aria-haspopup", "dialog");
+        const prefs = imagePrefs();
+        imagesButton.hidden = !prefs.button || prefs.mode === "off";
+        imagesButton.onclick = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          openImagePicker(input);
+        };
+        button.after(imagesButton);
+      }
       if (!pastesButton) {
         pastesButton = document.createElement("button");
         pastesButton.type = "button";
@@ -2500,10 +2876,10 @@
         if (scanMessages) scan();
       });
     };
-    const observer = new MutationObserver(schedule);
-    observer.observe(document.body, { childList: true, subtree: true });
+    const observer2 = new MutationObserver(schedule);
+    observer2.observe(document.body, { childList: true, subtree: true });
     return () => {
-      observer.disconnect();
+      observer2.disconnect();
     };
   }
   var W = unsafeWindow;
@@ -3162,6 +3538,7 @@
     pingSystem.applyPingColor();
     applyChatFont();
     initEmoteTooltip();
+    document.addEventListener("t7-images-change", rescanAll);
     startChatObservers();
     ensureButtons();
     scan();

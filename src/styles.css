@@ -245,3 +245,24 @@ form.cy-chat-f .t7-btn, form.dm-f .t7-btn{
     white-space:nowrap;vertical-align:middle;cursor:pointer}
 form.cy-chat-f .t7-btn:hover, form.dm-f .t7-btn:hover{background:rgb(165,100,255)}
 form.dm-f{position:relative}
+
+/* imgBB: chat images and saved-image dialog */
+.t7-images-btn[hidden]{display:none!important}
+.t7-image-card{display:inline-block;position:relative;width:min(100%,var(--t7-image-width,320px));max-width:100%;vertical-align:middle;line-height:normal}
+.t7-image-card>a{display:block;max-width:100%}
+.t7-image-card img{display:block;width:100%;height:auto;max-width:100%;max-height:var(--t7-image-height,250px);object-fit:contain;min-width:32px;min-height:24px}
+.t7-image-star{position:absolute;right:3px;top:3px;z-index:2;opacity:0;border:1px solid #777;border-radius:4px;padding:2px 5px;background:#111d;color:#ffce54;font:18px/1.2 system-ui;cursor:pointer}
+.t7-image-card:hover>.t7-image-star,.t7-image-card:focus-within>.t7-image-star{opacity:1}
+@media(hover:none){.t7-image-star{opacity:1}}
+.t7-image-error{color:#ff9d32!important;font:13px/1.4 system-ui,sans-serif}
+.t7-image-dialog{width:min(520px,100%);box-sizing:border-box;max-height:90vh;overflow:auto}
+.t7-image-url-row{display:flex;gap:6px;align-items:center}
+.t7-image-url-row>a{flex:none;background:#292936;border-radius:4px;color:#fff;padding:6px 10px;text-decoration:none}
+.t7-image-url{flex:1;min-width:0;padding:7px;border:1px solid #666;border-radius:4px;background:#101018;color:#eee;font:13px system-ui}
+.t7-image-preview{display:grid;place-items:center;background:#000;border-radius:4px}
+.t7-image-preview:empty{display:none}
+.t7-image-actions{display:flex;gap:6px}
+.t7-image-dialog button:disabled{opacity:.5;cursor:default}
+.t7-image-library{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;overflow:auto;min-height:60px}
+.t7-image-library-item{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:6px;padding:6px;background:#101018;border-radius:5px}
+.t7-image-library-item .t7-image-card img{max-height:120px}

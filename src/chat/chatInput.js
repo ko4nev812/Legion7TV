@@ -4,6 +4,14 @@ import { EV, SEL, on } from '../core/consts.js';
 import { togglePop, closePop, recordRecentFromMessage } from '../emotes/popup.js';
 import { pingSystem } from './pingSystem.js';
 import { arePastesEnabled, openPastes } from './pastes.js';
+import { imagePrefs } from './images.js';
+import { openImagePicker, closeImagePicker } from './imagePicker.js';
+
+document.addEventListener('t7-images-change', () => {
+    const prefs = imagePrefs();
+    document.querySelectorAll('.t7-images-btn').forEach((button) => { button.hidden = !prefs.button || prefs.mode === 'off'; });
+    closeImagePicker();
+});
 
 const bindings = new WeakMap();
 function normalizeBanword(value) {
@@ -279,6 +287,18 @@ export function ensureButtons() {
         }
 
         let pastesButton = form.querySelector('.t7-pastes-btn');
+        if (!form.querySelector('.t7-images-btn')) {
+            const imagesButton = document.createElement('button');
+            imagesButton.type = 'button';
+            imagesButton.className = 't7-btn t7-images-btn';
+            imagesButton.textContent = 'imgBB';
+            imagesButton.title = 'Картинки imgBB';
+            imagesButton.setAttribute('aria-haspopup', 'dialog');
+            const prefs = imagePrefs();
+            imagesButton.hidden = !prefs.button || prefs.mode === 'off';
+            imagesButton.onclick = (event) => { event.preventDefault(); event.stopPropagation(); openImagePicker(input); };
+            button.after(imagesButton);
+        }
         if (!pastesButton) {
             pastesButton = document.createElement('button');
             pastesButton.type = 'button';
