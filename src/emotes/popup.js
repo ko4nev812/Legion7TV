@@ -363,6 +363,7 @@ function setupResize(pop) {
 
 /* ---------- открытие ---------- */
 function openPop(btn) {
+    document.dispatchEvent(new Event('t7-emote-picker-open'));
     st.anchor = btn;
     const pop = document.createElement('div');
     st.pop = pop;

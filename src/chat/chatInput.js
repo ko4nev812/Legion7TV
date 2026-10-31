@@ -5,7 +5,7 @@ import { togglePop, closePop, recordRecentFromMessage } from '../emotes/popup.js
 import { pingSystem } from './pingSystem.js';
 import { arePastesEnabled, openPastes } from './pastes.js';
 import { imagePrefs } from './images.js';
-import { openImagePicker, closeImagePicker } from './imagePicker.js';
+import { openImagePicker, closeImagePicker, disposeImagePicker } from './imagePicker.js';
 
 document.addEventListener('t7-images-change', () => {
     const prefs = imagePrefs();
@@ -247,6 +247,7 @@ function bindChatForm(form, input) {
 }
 
 function disposeForm(form) {
+    disposeImagePicker(form);
     const dispose = bindings.get(form);
     if (!dispose) return;
     if (st.anchor && form.contains(st.anchor)) closePop();

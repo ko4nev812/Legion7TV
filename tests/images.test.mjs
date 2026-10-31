@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveImage } from '../src/chat/images.js';
+import { resolveImage, imageToken, imageId, imageIds, encodeImageLinks } from '../src/chat/images.js';
+
+test('imgBB tokens use a host namespace and accept legacy messages', () => {
+    assert.equal(imageToken('Ab123'), '{imgbb:Ab123}');
+    assert.equal(encodeImageLinks('https://ibb.co/Ab123'), '{imgbb:Ab123}');
+    assert.equal(encodeImageLinks('{img:Ab123}'), '{imgbb:Ab123}');
+    assert.equal(imageId('{imgbb:Ab123}'), 'Ab123');
+    assert.equal(imageId('{img:Ab123}'), 'Ab123');
+    assert.equal(imageId('{other:Ab123}'), null);
+    assert.deepEqual(imageIds('{img:Old1} {imgbb:New2} {other:Skip3} {imgbb:Old1}'), ['Old1', 'New2']);
+    assert.equal(encodeImageLinks('{imgbb:Ab123} https://example.org/Ab123'), '{imgbb:Ab123} https://example.org/Ab123');
+});
 
 test('imgBB downloads use CSP-compatible blob URLs and preserve GIF bytes', async (t) => {
     const originalRequest = globalThis.GM_xmlhttpRequest;

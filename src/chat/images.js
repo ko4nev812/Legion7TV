@@ -1,7 +1,9 @@
 import { store } from '../core/store.js';
 
 const ID = /^[a-zA-Z0-9]{1,32}$/;
-const TOKEN = /\{img:([a-zA-Z0-9]{1,32})\}/g;
+// Each image host gets its own namespace. `img` is the legacy imgBB alias.
+const TOKEN = /\{(?:imgbb|img):([a-zA-Z0-9]{1,32})\}/g;
+export const imageToken = (id) => `{imgbb:${id}}`;
 const URL_PATTERN = /(?<![\w@./-])(?:https?:\/\/)?(?:www\.)?ibb\.co\/([a-zA-Z0-9]{1,32})\/?(?![a-zA-Z0-9/_-]|\.[a-zA-Z0-9])(?:[?#][^\s<>"']*)?/gi;
 export const imagePrefs = () => {
     const p = store.get('t7Images') || {};
@@ -13,7 +15,7 @@ export function setImagePrefs(value) {
     document.dispatchEvent(new Event('t7-images-change'));
 }
 export function imageId(value) {
-    const token = /^\{img:([a-zA-Z0-9]{1,32})\}$/.exec(String(value).trim());
+    const token = /^\{(?:imgbb|img):([a-zA-Z0-9]{1,32})\}$/.exec(String(value).trim());
     if (token) return token[1];
     try {
         const url = new URL(/^https?:\/\//i.test(value) ? value : 'https://' + value);
@@ -21,7 +23,9 @@ export function imageId(value) {
         return ['http:', 'https:'].includes(url.protocol) && ['ibb.co', 'www.ibb.co'].includes(url.hostname) && ID.test(id) ? id : null;
     } catch { return null; }
 }
-export const encodeImageLinks = (text) => text.replace(URL_PATTERN, (_, id) => `{img:${id}}`);
+export const encodeImageLinks = (text) => text
+    .replace(TOKEN, (_, id) => imageToken(id))
+    .replace(URL_PATTERN, (_, id) => imageToken(id));
 export const imageIds = (text) => [...new Set([...text.matchAll(TOKEN)].map((m) => m[1]))];
 export function savedImages(key) {
     const ids = store.get('t7Images:' + key);
