@@ -1,6 +1,7 @@
 import { imagePrefs, imageId, imageCard, savedImages, imageToken } from './images.js';
 import { closePop } from '../emotes/popup.js';
 import { store } from '../core/store.js';
+import { st } from '../core/state.js';
 
 let closeActive = null;
 let activeInput = null;
@@ -24,12 +25,17 @@ export function openImagePicker(input, anchor = input?.closest('form')?.querySel
         <div class="t7-image-preview" aria-live="polite"></div>
         <div class="t7-image-actions"><button type="button" class="t7-b" data-action="insert" disabled>Вставить</button><button type="button" class="t7-b" data-action="send" disabled>Отправить</button></div>
         <div class="t7-views" role="tablist"><button type="button" role="tab" data-tab="recent" aria-selected="true">Последние 10</button><button type="button" role="tab" data-tab="favorites" aria-selected="false">Избранные</button></div>
-        <div class="t7-image-library"></div>`;
+        <div class="t7-image-library"></div><div class="t7-rs" title="Потяни, чтобы изменить размер"></div>`;
     const clamp = (value, min, max) => Math.max(min, Math.min(Math.max(min, max), value));
     let position = store.get('t7ImagePickerPosition');
     if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) position = null;
+    let size = store.get('t7ImagePickerSize') || st.win;
+    if (!size || !Number.isFinite(size.w) || !Number.isFinite(size.h)) size = null;
     const place = () => {
         if (!input.isConnected) { close(); return; }
+        dialog.style.width = clamp(size ? size.w : 340, Math.min(240, innerWidth - 16), innerWidth - 16) + 'px';
+        dialog.style.maxHeight = (size ? innerHeight - 16 : Math.min(520, innerHeight - 16)) + 'px';
+        dialog.style.height = size ? clamp(size.h, Math.min(240, innerHeight - 16), innerHeight - 16) + 'px' : '';
         const bounds = dialog.getBoundingClientRect();
         const rect = (anchor || input).getBoundingClientRect();
         const x = position ? position.x : rect.right - bounds.width;
@@ -68,7 +74,37 @@ export function openImagePicker(input, anchor = input?.closest('form')?.querySel
     });
     header.addEventListener('dblclick', (event) => {
         if (event.target.closest('button')) return;
-        position = null; store.set('t7ImagePickerPosition', null); place();
+        position = null; size = null;
+        store.set('t7ImagePickerPosition', null);
+        store.set('t7ImagePickerSize', null);
+        place();
+    });
+    dialog.querySelector('.t7-rs').addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault(); event.stopPropagation(); endDrag();
+        const bounds = dialog.getBoundingClientRect();
+        const startX = event.clientX, startY = event.clientY;
+        position = { x: bounds.left, y: bounds.top };
+        const move = (next) => {
+            size = {
+                w: clamp(bounds.width + next.clientX - startX, Math.min(240, innerWidth - position.x - 8), innerWidth - position.x - 8),
+                h: clamp(bounds.height + next.clientY - startY, Math.min(240, innerHeight - position.y - 8), innerHeight - position.y - 8)
+            };
+            place();
+        };
+        const up = () => {
+            endDrag();
+            if (size) store.set('t7ImagePickerSize', size);
+            store.set('t7ImagePickerPosition', position);
+        };
+        endDrag = () => {
+            document.removeEventListener('pointermove', move);
+            document.removeEventListener('pointerup', up);
+            document.removeEventListener('pointercancel', up);
+        };
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', up);
+        document.addEventListener('pointercancel', up);
     });
     const resizeObserver = new ResizeObserver(place);
     const url = dialog.querySelector('.t7-image-url');

@@ -255,7 +255,7 @@ form.dm-f{position:relative}
 .t7-image-card:hover>.t7-image-star,.t7-image-card:focus-within>.t7-image-star{opacity:1}
 @media(hover:none){.t7-image-star{opacity:1}}
 .t7-image-error{color:#ff9d32!important;font:13px/1.4 system-ui,sans-serif}
-.t7-image-dialog{position:fixed;z-index:2147483000;width:min(520px,calc(100vw - 16px));box-sizing:border-box;max-height:calc(100vh - 16px);overflow:auto}
+.t7-image-dialog{position:fixed;z-index:2147483000;width:min(340px,calc(100vw - 16px));box-sizing:border-box;max-height:min(520px,calc(100vh - 16px));padding:10px;gap:8px;overflow:auto}
 .t7-image-dialog>.t7-paste-header{cursor:grab;touch-action:none;user-select:none}
 .t7-image-dialog>.t7-paste-header:active{cursor:grabbing}
 .t7-image-url-row{display:flex;gap:6px;align-items:center}
