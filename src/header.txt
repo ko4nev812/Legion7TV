@@ -18,7 +18,7 @@
 // @connect      cdn.7tv.app
 // @connect      api.ivr.fi
 // @connect      workers.dev
-// @connect      ibb.co
-// @connect      i.ibb.co
+// @connect      postimg.cc
+// @connect      i.postimg.cc
 // @license      MIT
 // ==/UserScript==

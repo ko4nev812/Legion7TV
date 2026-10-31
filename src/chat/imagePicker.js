@@ -11,9 +11,9 @@ export function openImagePicker(input) {
     dialog.className = 't7-paste-dialog t7-image-dialog';
     dialog.setAttribute('role', 'dialog');
     dialog.setAttribute('aria-modal', 'true');
-    dialog.setAttribute('aria-label', 'Картинки imgBB');
-    dialog.innerHTML = `<div class="t7-paste-header"><b>Картинки imgBB</b><button type="button" class="t7-paste-close" aria-label="Закрыть">×</button></div>
-        <div class="t7-image-url-row"><a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" title="Загрузить на imgBB" aria-label="Загрузить на imgBB">↗</a><input type="text" class="t7-image-url" placeholder="https://ibb.co/код" aria-label="Ссылка imgBB"></div>
+    dialog.setAttribute('aria-label', 'Картинки Postimages');
+    dialog.innerHTML = `<div class="t7-paste-header"><b>Картинки Postimages</b><button type="button" class="t7-paste-close" aria-label="Закрыть">×</button></div>
+        <div class="t7-image-url-row"><a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" title="Загрузить на Postimages" aria-label="Загрузить на Postimages">↗</a><input type="text" class="t7-image-url" placeholder="https://postimg.cc/код" aria-label="Ссылка Postimages"></div>
         <div class="t7-image-preview" aria-live="polite"></div>
         <div class="t7-image-actions"><button type="button" class="t7-b" data-action="insert" disabled>Вставить</button><button type="button" class="t7-b" data-action="send" disabled>Отправить</button></div>
         <div class="t7-views" role="tablist"><button type="button" role="tab" data-tab="recent" aria-selected="true">Последние 10</button><button type="button" role="tab" data-tab="favorites" aria-selected="false">Избранные</button></div>
@@ -34,7 +34,7 @@ export function openImagePicker(input) {
             const card = imageCard(id);
             const choose = document.createElement('button');
             choose.type = 'button'; choose.className = 't7-b'; choose.textContent = 'Выбрать';
-            choose.onclick = () => { url.value = 'https://ibb.co/' + id; updatePreview(); };
+            choose.onclick = () => { url.value = 'https://postimg.cc/' + id; updatePreview(); };
             item.append(card, choose); library.append(item);
         }
     };

@@ -2,7 +2,7 @@ import { store } from '../core/store.js';
 
 const ID = /^[a-zA-Z0-9]{1,32}$/;
 const TOKEN = /\{img:([a-zA-Z0-9]{1,32})\}/g;
-const URL_PATTERN = /(?<![\w@./-])(?:https?:\/\/)?(?:www\.)?ibb\.co\/([a-zA-Z0-9]{1,32})\/?(?![a-zA-Z0-9/_-]|\.[a-zA-Z0-9])(?:[?#][^\s<>"']*)?/gi;
+const URL_PATTERN = /(?<![\w@./-])(?:https?:\/\/)?(?:www\.)?postimg\.cc\/([a-zA-Z0-9]{1,32})\/?(?![a-zA-Z0-9/_-]|\.[a-zA-Z0-9])(?:[?#][^\s<>"']*)?/gi;
 export const imagePrefs = () => {
     const p = store.get('t7Images') || {};
     return { mode: ['off', 'link', 'image'].includes(p.mode) ? p.mode : 'image', button: p.button === true,
@@ -18,24 +18,24 @@ export function imageId(value) {
     try {
         const url = new URL(/^https?:\/\//i.test(value) ? value : 'https://' + value);
         const id = url.pathname.replace(/^\//, '').replace(/\/$/, '');
-        return ['ibb.co', 'www.ibb.co'].includes(url.hostname) && ID.test(id) ? id : null;
+        return ['http:', 'https:'].includes(url.protocol) && ['postimg.cc', 'www.postimg.cc'].includes(url.hostname) && ID.test(id) ? id : null;
     } catch { return null; }
 }
 export const encodeImageLinks = (text) => text.replace(URL_PATTERN, (_, id) => `{img:${id}}`);
 export const imageIds = (text) => [...new Set([...text.matchAll(TOKEN)].map((m) => m[1]))];
 export function savedImages(key) {
-    const ids = store.get('t7Images:' + key);
+    const ids = store.get('t7Postimages:' + key);
     return Array.isArray(ids) ? [...new Set(ids.filter((id) => typeof id === 'string' && ID.test(id)))] : [];
 }
 export function rememberImages(text) {
     const ids = imageIds(text);
     if (!ids.length) return;
-    store.set('t7Images:recent', [...ids.reverse(), ...savedImages('recent').filter((id) => !ids.includes(id))].slice(0, 10));
+    store.set('t7Postimages:recent', [...ids.reverse(), ...savedImages('recent').filter((id) => !ids.includes(id))].slice(0, 10));
     document.dispatchEvent(new Event('t7-image-library-change'));
 }
 function toggleFavorite(id) {
     const ids = savedImages('favorites');
-    store.set('t7Images:favorites', ids.includes(id) ? ids.filter((item) => item !== id) : [id, ...ids]);
+    store.set('t7Postimages:favorites', ids.includes(id) ? ids.filter((item) => item !== id) : [id, ...ids]);
     document.dispatchEvent(new Event('t7-image-library-change'));
 }
 
@@ -54,21 +54,21 @@ export function resolveImage(id) {
     if (requests.has(id)) return requests.get(id);
     const request = new Promise((resolve, reject) => {
         waiting.push(() => new Promise((done) => {
-            const fail = () => { reject(new Error('Ошибка imgBB')); done(); };
+            const fail = () => { reject(new Error('Ошибка Postimages')); done(); };
             try {
-                GM_xmlhttpRequest({ method: 'GET', url: 'https://ibb.co/' + id, timeout: 15000,
+                GM_xmlhttpRequest({ method: 'GET', url: 'https://postimg.cc/' + id, timeout: 15000,
                     onerror: fail, ontimeout: fail, onabort: fail,
                     onload(response) {
                         try {
                             if (response.status !== 200) throw new Error();
                             const page = new DOMParser().parseFromString(response.responseText, 'text/html');
                             const candidates = [
-                                page.querySelector('#image-viewer-container img')?.getAttribute('src'),
+                                page.querySelector('#main-image')?.getAttribute('src'),
                                 page.querySelector('link[rel="image_src"]')?.getAttribute('href'),
                                 page.querySelector('meta[property="og:image"]')?.getAttribute('content')
                             ];
                             const src = candidates.find((value) => {
-                                try { const u = new URL(value); return u.protocol === 'https:' && u.hostname === 'i.ibb.co'; }
+                                try { const u = new URL(value); return u.protocol === 'https:' && u.hostname === 'i.postimg.cc'; }
                                 catch { return false; }
                             });
                             if (!src) throw new Error();
@@ -98,7 +98,7 @@ function loadCard(card) {
     lazyImages.delete(card);
     const { id, image, stickFrom } = data;
     resolveImage(id).then((src) => { if (card.isConnected) image.src = src; }, () => {
-        if (card.isConnected) { errorText(card, 'Ошибка imgBB'); stickFrom(card); }
+        if (card.isConnected) { errorText(card, 'Ошибка Postimages'); stickFrom(card); }
     });
 }
 export function imageCard(id, stickFrom = () => {}) {
@@ -106,11 +106,11 @@ export function imageCard(id, stickFrom = () => {}) {
     card.className = 't7-image-card';
     card.style.setProperty('--t7-image-height', imagePrefs().height + 'px');
     const link = document.createElement('a');
-    link.href = 'https://ibb.co/' + id;
+    link.href = 'https://postimg.cc/' + id;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     const image = document.createElement('img');
-    image.alt = 'Изображение imgBB';
+    image.alt = 'Изображение Postimages';
     image.referrerPolicy = 'no-referrer';
     image.addEventListener('load', () => {
         if (image.naturalHeight) card.style.setProperty('--t7-image-width', (imagePrefs().height * image.naturalWidth / image.naturalHeight) + 'px');
@@ -157,7 +157,7 @@ export function processImages({ content, kind, stickFrom }) {
             if (mode === 'image') fragment.append(imageCard(match[1], stickFrom));
             else {
                 const link = document.createElement('a');
-                link.href = 'https://ibb.co/' + match[1]; link.textContent = link.href;
+                link.href = 'https://postimg.cc/' + match[1]; link.textContent = link.href;
                 link.target = '_blank'; link.rel = 'noopener noreferrer'; fragment.append(link);
             }
             offset = match.index + match[0].length;

@@ -132,9 +132,9 @@ export function openSettings() {
             </details>
 
             <details class="t7-sec">
-                <summary>Изображения imgBB</summary>
+                <summary>Изображения Postimages</summary>
                 <label class="t7-fl">Отображение<select class="t7-images-mode"><option value="off">Выключено</option><option value="link">Кликабельная ссылка</option><option value="image">Картинка / GIF</option></select></label>
-                <label class="t7-chk"><input type="checkbox" class="t7-images-button"> Показывать кнопку imgBB рядом с 7TV</label>
+                <label class="t7-chk"><input type="checkbox" class="t7-images-button"> Показывать кнопку Postimages рядом с 7TV</label>
                 <label class="t7-fl">Максимальная высота картинки (px)<input type="number" class="t7-images-height" min="60" max="1000" step="10"></label>
             </details>
 

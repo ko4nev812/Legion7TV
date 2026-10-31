@@ -246,7 +246,7 @@ form.cy-chat-f .t7-btn, form.dm-f .t7-btn{
 form.cy-chat-f .t7-btn:hover, form.dm-f .t7-btn:hover{background:rgb(165,100,255)}
 form.dm-f{position:relative}
 
-/* imgBB: chat images and saved-image dialog */
+/* Postimages: chat images and saved-image dialog */
 .t7-images-btn[hidden]{display:none!important}
 .t7-image-card{display:inline-block;position:relative;width:min(100%,var(--t7-image-width,320px));max-width:100%;vertical-align:middle;line-height:normal}
 .t7-image-card>a{display:block;max-width:100%}
