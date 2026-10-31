@@ -1,19 +1,20 @@
-import { EM, S, st } from './state.js';
-import { SIZES } from './config.js';
-import { store } from './store.js';
-import { clamp } from './util.js';
+import { EM, S, st } from '../core/state.js';
+import { SIZES } from '../core/config.js';
+import { store } from '../core/store.js';
+import { clamp } from '../core/util.js';
 import { fetchImg } from './imgcache.js';
-import { urlFor } from './emotes.js';
-import { openSettings } from './settings.js';
-import { getRecentLimit } from './recentEmotes.js';
-import { setEmoteTooltipData } from './emoteTooltip.js';
+import { reusableUrlsFor, urlFor } from './emotes.js';
+import { openSettings } from '../settings/settings.js';
+import { getRecentLimit } from '../chat/prefs.js';
+import { EV, STORE, on } from '../core/consts.js';
+import { setEmoteTooltipData } from './tooltip.js';
 
-const FAVORITES_KEY = 't7favorites';
-const RECENT_KEY = 't7recent';
+const FAVORITES_KEY = STORE.favorites;
+const RECENT_KEY = STORE.recentEmotes;
 let gridMode = 'all';
 let emoteData = new Map();
 
-document.addEventListener('t7-recent-limit-change', () => {
+on(EV.recentLimitChange, () => {
     if (st.pop && gridMode === 'recent') renderGrid();
 });
 
@@ -87,32 +88,16 @@ function insertEmote(name) {
 }
 
 /* ---------- список эмоутов ---------- */
-function requestGridImage(el, priority) {
-    const em = emoteFor(el.dataset.name);
-    if (!em) return;
-    const request = fetchImg(urlFor(em, SIZES[S.size].n), priority);
-    if (el.dataset.l) return;   // повторный вызов всё равно повысил приоритет запроса
-    el.dataset.l = '1';
-    request.then((src) => {
-        if (el.isConnected) el.firstChild.src = src;
-    }, () => {});
-}
-
-function onNear(entries) {
+function onVis(entries) {
     for (const en of entries) {
         if (!en.isIntersecting) continue;
         const el = en.target;
         if (st.io) st.io.unobserve(el);
-        requestGridImage(el, 0);
-    }
-}
-
-function onVisible(entries) {
-    for (const en of entries) {
-        if (!en.isIntersecting) continue;
-        const el = en.target;
-        if (st.visibleIo) st.visibleIo.unobserve(el);
-        requestGridImage(el, 1);
+        const em = emoteFor(el.dataset.name);
+        if (!em || el.dataset.l) continue;
+        el.dataset.l = '1';
+        const resolution = SIZES[S.size].n;
+        fetchImg(urlFor(em, resolution), false, reusableUrlsFor(em, resolution)).then((d) => { el.firstChild.src = d; }, () => {});
     }
 }
 
@@ -135,7 +120,6 @@ export function renderGrid() {
     if (!st.pop) return;
     const gr = st.pop.querySelector('.t7-gr');
     st.io.disconnect();
-    st.visibleIo.disconnect();
     gr.textContent = '';
     const allNames = Object.keys(EM).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     const favoriteEntries = readEntries(FAVORITES_KEY);
@@ -162,8 +146,8 @@ export function renderGrid() {
             b.type = 'button';
             b.className = 't7-it';
             b.dataset.name = n;
-            b.setAttribute('aria-label', n);
             setEmoteTooltipData(b, n, emoteFor(n));
+            b.setAttribute('aria-label', n);
             const im = document.createElement('img');
             im.alt = '';
             im.decoding = 'async';
@@ -180,7 +164,6 @@ export function renderGrid() {
             item.append(b, favorite);
             w.appendChild(item);
             st.io.observe(b);
-            st.visibleIo.observe(b);
         }
         gr.append(h, w);
     };
@@ -249,10 +232,6 @@ export function place() {
 }
 
 /* ---------- закрытие ---------- */
-function onOutside(e) {
-    if (e.target.closest && e.target.closest('.t7-set')) return;   // клики в настройках не закрывают окошко
-    if (st.pop && !st.pop.contains(e.target) && !(st.anchor && st.anchor.contains(e.target))) closePop();
-}
 function onKey(e) {
     if (st.set) return;   // Esc сначала закрывает настройки
     if (e.key === 'Escape' && st.pop) {
@@ -269,9 +248,6 @@ export function closePop() {
     st.pop = null;
     if (st.io) st.io.disconnect();
     st.io = null;
-    if (st.visibleIo) st.visibleIo.disconnect();
-    st.visibleIo = null;
-    document.removeEventListener('pointerdown', onOutside, true);
     document.removeEventListener('keydown', onKey, true);
     removeEventListener('resize', place);
 }
@@ -320,7 +296,7 @@ function setupDrag(pop) {
             if (!started || st.pop !== pop) return;
             pop.classList.remove('t7-drag');
             st.pos = { x: nx, y: ny };
-            store.set('t7pos', st.pos);
+            store.set(STORE.popupPosition, st.pos);
             place();   // один раз: переносит transform в left/top и пересчитывает высоту
         };
         hd.addEventListener('pointermove', move);
@@ -332,8 +308,8 @@ function setupDrag(pop) {
         if (e.target.closest('button')) return;
         st.pos = null;
         st.win = null;
-        store.set('t7pos', null);
-        store.set('t7win', null);
+        store.set(STORE.popupPosition, null);
+        store.set(STORE.popupSize, null);
         place();
     });
 }
@@ -375,8 +351,8 @@ function setupResize(pop) {
             pop.classList.remove('t7-drag');
             st.win = { w, h };
             st.pos = { x: r.left, y: r.top };
-            store.set('t7win', st.win);
-            store.set('t7pos', st.pos);
+            store.set(STORE.popupSize, st.win);
+            store.set(STORE.popupPosition, st.pos);
             place();
         };
         rs.addEventListener('pointermove', move);
@@ -434,13 +410,11 @@ function openPop(btn) {
             if (gridMode === 'recent') renderGrid();
         }
     });
-    st.io = new IntersectionObserver(onNear, { root: gr, rootMargin: '240px' });
-    st.visibleIo = new IntersectionObserver(onVisible, { root: gr });
+    st.io = new IntersectionObserver(onVis, { root: gr, rootMargin: '120px' });
 
     document.body.appendChild(pop);
     renderGrid();
     place();
-    document.addEventListener('pointerdown', onOutside, true);
     document.addEventListener('keydown', onKey, true);
     addEventListener('resize', place);
 }

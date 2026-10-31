@@ -1,4 +1,5 @@
-import { store } from './store.js';
+import { store } from '../core/store.js';
+import { STORE } from '../core/consts.js';
 
 const ALLOWED = ['7tv.io', 'cdn.7tv.app', 'api.ivr.fi'];
 const ROUTES = { '7tv.io': 'api', 'cdn.7tv.app': 'cdn', 'api.ivr.fi': 'ivr' };
@@ -12,7 +13,7 @@ export const normProxy = (v) => {
 };
 
 let proxy = (() => {
-    const v = store.get('t7proxy');
+    const v = store.get(STORE.networkProxy);
     return normProxy(typeof v === 'string' ? v : DEFAULT_PROXY);
 })();
 let proxyDownUntil = 0;
@@ -21,7 +22,7 @@ export const getProxy = () => proxy;
 export function setProxy(v) {
     proxy = normProxy(v);
     proxyDownUntil = 0;
-    store.set('t7proxy', proxy);   // пустая строка = осознанно «без прокси»
+    store.set(STORE.networkProxy, proxy);   // пустая строка = осознанно «без прокси»
 }
 
 const urlOk = (url) => {

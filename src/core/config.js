@@ -5,8 +5,25 @@ export const SIZES = {
     s: { h: '1.3em', n: 2, p: 32, label: 'S' },
     m: { h: '1.9em', n: 2, p: 40, label: 'M' },
     l: { h: '2.6em', n: 3, p: 52, label: 'L' },
-    x: { h: '3.4em', n: 3, p: 68, label: 'XL' }
+    x: { h: '3.4em', n: 3, p: 68, label: 'XL' },
+    xxl: { h: '4.2em', n: 4, p: 84, label: 'XXL' }
 };
+
+export const HARD_BANNED_WORDS = [
+    // Гомофобные оскорбления
+    'пидор', 'пидорас', 'пидрила', 'пидр',
+    'гомик', 'гомосек', 'лесбуха',
+    // Расовые оскорбления
+    'ниггер', 'нигга', 'черномазый',
+    'черножопый', 'чурка',
+    // Этнические и национальные оскорбления
+    'хач', 'чурбан', 'жид',
+    'узкоглазый', 'чуркобес',
+    // Сексуальные унижения
+    'куколд', 'рогоносец', 'импотент', 'шлюха',
+    // Жёсткие личные оскорбления
+    'хуесос', 'дегенерат', 'даун'
+];
 
 export const pageChan = (() => {
     const m = /\/c\/([\w]+)/.exec(location.pathname);
@@ -18,6 +35,10 @@ export const pageChan = (() => {
 // name - своё имя (необязательно, без пробелов); нет - берётся имя с 7TV
 export const EXTRA_EMOTES = [
     { id: '01KPTZTF2P1MP5RFNJ4Q1ZQZS6'},
+    { id: '01J64BY7C0000FXZ59PB5ZMYVJ'},
+    { id: '01JW6SB53B0B9T6EMJ4QWZA326'},
+    { id: '01KVWQKYK22C9XHBG1NMKHYR67'},
+    { id: '01HCCXW2M00003DZM5HVHF63FP'},
 ];
 
 // Целые наборы эмоутов: id из ссылки 7tv.app/emote-sets/<id>

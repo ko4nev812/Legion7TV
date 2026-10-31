@@ -1,4 +1,4 @@
-export const clamp = (v, a, b) => Math.max(a, Math.min(v, b));
+export { clamp } from './consts.js';
 export const has = (m, k) => Object.prototype.hasOwnProperty.call(m, k);
 
 export function parseNick(v) {

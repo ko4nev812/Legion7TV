@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build and requested checks",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"npm run build && node --check 7tv-multidonate.user.js && git diff --check"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

@@ -1,30 +1,35 @@
-import { store } from './store.js';
+import { store } from '../core/store.js';
+import { EV, STORE, emit } from '../core/consts.js';
 
-const KEY = 't7ping';
+const CONFIG_KEY = STORE.pingConfig;
 const PRESETS = new Set(['bell', 'chime', 'pop', 'custom']);
 const DEFAULTS = {
     volume: 0.5,
     selectedPreset: 'bell',
     customSound: '',
+    pingColor: '#e89aa3',
+    tabCompletion: true,
     aliases: [],
     blacklist: [],
     stopWords: []
 };
 
+function normalizeList(value) {
+    return String(value || '').split(/[\n,;]+/).map((item) => item.trim().toLowerCase()).filter(Boolean);
+}
+
 function readConfig() {
-    const saved = store.get(KEY);
+    const saved = store.get(CONFIG_KEY);
     const config = { ...DEFAULTS, ...(saved && typeof saved === 'object' ? saved : {}) };
     config.volume = Number.isFinite(config.volume) ? Math.max(0, Math.min(1, config.volume)) : DEFAULTS.volume;
     config.selectedPreset = PRESETS.has(config.selectedPreset) ? config.selectedPreset : DEFAULTS.selectedPreset;
     config.customSound = typeof config.customSound === 'string' && config.customSound.startsWith('data:audio/') ? config.customSound : '';
+    config.pingColor = /^#[0-9a-f]{6}$/i.test(config.pingColor) ? config.pingColor : DEFAULTS.pingColor;
+    config.tabCompletion = config.tabCompletion !== false;
     for (const key of ['aliases', 'blacklist', 'stopWords']) {
         config[key] = Array.isArray(config[key]) ? normalizeList(config[key].join('\n')) : [];
     }
     return config;
-}
-
-function normalizeList(value) {
-    return String(value || '').split(/[\n,;]+/).map((item) => item.trim().toLowerCase()).filter(Boolean);
 }
 
 function escapeRegex(value) {
@@ -34,25 +39,72 @@ function escapeRegex(value) {
 class PingSystem {
     constructor() {
         this.config = readConfig();
+        this.listeners = new Set();
+        this.regexCache = new Map();
         this.audioContext = null;
         this.customBuffer = null;
         this.customBufferPromise = null;
     }
 
+    subscribe(listener) {
+        if (typeof listener !== 'function') return () => {};
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    }
+
+    notify() {
+        for (const listener of this.listeners) {
+            try {
+                listener(this.config);
+            } catch (error) {
+                console.warn('[7TV] обработчик настроек пингов', error);
+            }
+        }
+    }
+
     save() {
-        store.set(KEY, this.config);
+        store.set(CONFIG_KEY, this.config);
     }
 
     setList(key, value) {
         if (!['aliases', 'blacklist', 'stopWords'].includes(key)) return;
         this.config[key] = normalizeList(value);
+        if (key === 'aliases') this.regexCache.clear();
         this.save();
-        if (this.onChange) this.onChange();
+        this.notify();
+    }
+
+    setTabCompletion(enabled) {
+        this.config.tabCompletion = !!enabled;
+        this.save();
+        emit(EV.tabCompletionChange);
+    }
+
+    toggleBlacklist(login) {
+        const user = String(login || '').trim().toLowerCase();
+        if (!user) return false;
+        const blocked = this.config.blacklist.includes(user);
+        const next = blocked ? this.config.blacklist.filter((item) => item !== user) : [...this.config.blacklist, user];
+        this.setList('blacklist', next.join('\n'));
+        return !blocked;
     }
 
     setVolume(value) {
-        this.config.volume = Math.max(0, Math.min(1, Number(value) || 0));
+        const volume = Number(value);
+        this.config.volume = Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : DEFAULTS.volume;
         this.save();
+    }
+
+    setPingColor(value) {
+        const color = String(value || '').trim();
+        if (!/^#[0-9a-f]{6}$/i.test(color)) return;
+        this.config.pingColor = color.toLowerCase();
+        this.save();
+        document.documentElement?.style.setProperty('--t7-ping-color', this.config.pingColor);
+    }
+
+    applyPingColor() {
+        document.documentElement?.style.setProperty('--t7-ping-color', this.config.pingColor);
     }
 
     setPreset(value) {
@@ -81,12 +133,17 @@ class PingSystem {
 
     isPinged(messageText, extraAliases = []) {
         const text = String(messageText || '');
-        return [...this.config.aliases, ...extraAliases].some((raw) => {
+        for (const raw of [...this.config.aliases, ...extraAliases]) {
             const alias = String(raw || '').trim().toLowerCase();
-            if (!alias) return false;
-            const pattern = new RegExp('(^|[^\\p{L}\\p{N}_])' + escapeRegex(alias) + '(?=$|[^\\p{L}\\p{N}_])', 'iu');
-            return pattern.test(text);
-        });
+            if (!alias) continue;
+            let matcher = this.regexCache.get(alias);
+            if (!matcher) {
+                matcher = new RegExp('(^|[^\\p{L}\\p{N}_])' + escapeRegex(alias) + '(?=$|[^\\p{L}\\p{N}_])', 'iu');
+                this.regexCache.set(alias, matcher);
+            }
+            if (matcher.test(text)) return true;
+        }
+        return false;
     }
 
     filterLabel(sender, messageText) {
@@ -155,29 +212,24 @@ class PingSystem {
             return;
         }
 
-        try {
-            const now = context.currentTime;
-            const tones = {
-                bell: [[740, 0, 0.24, 'sine'], [988, 0.08, 0.3, 'sine']],
-                chime: [[660, 0, 0.32, 'sine'], [880, 0.12, 0.4, 'sine']],
-                pop: [[360, 0, 0.12, 'triangle'], [220, 0.04, 0.16, 'sine']]
-            }[this.config.selectedPreset] || [];
-            for (const [frequency, offset, duration, type] of tones) {
-                const oscillator = context.createOscillator();
-                const gain = context.createGain();
-                const start = now + offset;
-                oscillator.type = type;
-                oscillator.frequency.setValueAtTime(frequency, start);
-                gain.gain.setValueAtTime(0.0001, start);
-                gain.gain.exponentialRampToValueAtTime(Math.max(0.001, this.config.volume * 0.35), start + 0.015);
-                gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-                oscillator.connect(gain);
-                gain.connect(context.destination);
-                oscillator.start(start);
-                oscillator.stop(start + duration);
-            }
-        } catch (error) {
-            console.warn('[7TV] не удалось воспроизвести звук пинга', error);
+        const tones = {
+            bell: [[740, 0, 0.24, 'sine'], [988, 0.08, 0.3, 'sine']],
+            chime: [[660, 0, 0.32, 'sine'], [880, 0.12, 0.4, 'sine']],
+            pop: [[360, 0, 0.12, 'triangle'], [220, 0.04, 0.16, 'sine']]
+        }[this.config.selectedPreset] || [];
+        for (const [frequency, offset, duration, type] of tones) {
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            const start = context.currentTime + offset;
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(frequency, start);
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(Math.max(0.001, this.config.volume * 0.35), start + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.start(start);
+            oscillator.stop(start + duration);
         }
     }
 }
