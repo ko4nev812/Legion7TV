@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveImage } from '../src/chat/images.js';
 
-test('Postimages downloads use CSP-compatible blob URLs and preserve GIF bytes', async (t) => {
+test('imgBB downloads use CSP-compatible blob URLs and preserve GIF bytes', async (t) => {
     const originalRequest = globalThis.GM_xmlhttpRequest;
     const originalParser = globalThis.DOMParser;
     const urls = [];
@@ -17,7 +17,7 @@ test('Postimages downloads use CSP-compatible blob URLs and preserve GIF bytes',
     // Isolate the download boundary from HTML parsing and the Tampermonkey runtime.
     globalThis.DOMParser = class {
         parseFromString(source) {
-            return { querySelector: (selector) => selector === '#main-image'
+            return { querySelector: (selector) => selector === '#image-viewer-container img'
                 ? { getAttribute: () => source } : null };
         }
     };
@@ -25,7 +25,7 @@ test('Postimages downloads use CSP-compatible blob URLs and preserve GIF bytes',
         requests.push(request);
         queueMicrotask(() => {
             if (request.responseType !== 'arraybuffer') {
-                request.onload({ status: 200, responseText: 'https://i.postimg.cc/test/original.gif' });
+                request.onload({ status: 200, responseText: 'https://i.ibb.co/test/original.gif' });
             } else if (binaryMode === 'timeout') request.ontimeout();
             else request.onload({
                 status: binaryMode === 'missing' ? 404 : 200,
@@ -44,13 +44,13 @@ test('Postimages downloads use CSP-compatible blob URLs and preserve GIF bytes',
     assert.equal(response.headers.get('content-type'), 'image/gif');
     assert.deepEqual(Buffer.from(await response.arrayBuffer()), gif);
     assert.equal(requests.length, 2, 'one page request and one binary request');
-    assert.equal(requests[1].url, 'https://i.postimg.cc/test/original.gif');
+    assert.equal(requests[1].url, 'https://i.ibb.co/test/original.gif');
     assert.equal(requests[1].responseType, 'arraybuffer');
     assert.equal(await resolveImage('gifTest'), url, 'completed downloads are reused');
 
     for (const mode of ['missing', 'html', 'empty', 'timeout']) {
         binaryMode = mode;
-        await assert.rejects(resolveImage('fail' + mode), /Ошибка Postimages/);
+        await assert.rejects(resolveImage('fail' + mode), /Ошибка imgBB/);
     }
     binaryMode = 'ok';
     const retried = await resolveImage('failmissing');

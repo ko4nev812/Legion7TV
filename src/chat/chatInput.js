@@ -291,8 +291,8 @@ export function ensureButtons() {
             const imagesButton = document.createElement('button');
             imagesButton.type = 'button';
             imagesButton.className = 't7-btn t7-images-btn';
-            imagesButton.textContent = 'Postimages';
-            imagesButton.title = 'Картинки Postimages';
+            imagesButton.textContent = 'imgBB';
+            imagesButton.title = 'Картинки imgBB';
             imagesButton.setAttribute('aria-haspopup', 'dialog');
             const prefs = imagePrefs();
             imagesButton.hidden = !prefs.button || prefs.mode === 'off';

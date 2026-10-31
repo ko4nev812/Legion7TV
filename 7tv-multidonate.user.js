@@ -2,7 +2,7 @@
 // @author       ProCto_Fliy
 // @name         Legion chat extentions (7TV, более удобный чат и тд)
 // @namespace    https://play.multidonate.ru/
-// @version      4.10.2
+// @version      4.10.3
 // @description  Эмоуты 7TV в чате: кнопка 7TV, ник стримера, размер, список эмоутов, быстрый кеш
 // @match        https://play.multidonate.ru/*
 // @icon         https://cdn.7tv.app/emote/01F71VQYHR000D3ZZ6Q11NR7TV/2x.webp
@@ -18,8 +18,8 @@
 // @connect      cdn.7tv.app
 // @connect      api.ivr.fi
 // @connect      workers.dev
-// @connect      postimg.cc
-// @connect      i.postimg.cc
+// @connect      ibb.co
+// @connect      i.ibb.co
 // @license      MIT
 // ==/UserScript==
 (() => {
@@ -617,7 +617,7 @@
   }
   var ID = /^[a-zA-Z0-9]{1,32}$/;
   var TOKEN = /\{img:([a-zA-Z0-9]{1,32})\}/g;
-  var URL_PATTERN = /(?<![\w@./-])(?:https?:\/\/)?(?:www\.)?postimg\.cc\/([a-zA-Z0-9]{1,32})\/?(?![a-zA-Z0-9/_-]|\.[a-zA-Z0-9])(?:[?#][^\s<>"']*)?/gi;
+  var URL_PATTERN = /(?<![\w@./-])(?:https?:\/\/)?(?:www\.)?ibb\.co\/([a-zA-Z0-9]{1,32})\/?(?![a-zA-Z0-9/_-]|\.[a-zA-Z0-9])(?:[?#][^\s<>"']*)?/gi;
   var imagePrefs = () => {
     const p = store.get("t7Images") || {};
     return {
@@ -636,7 +636,7 @@
     try {
       const url = new URL(/^https?:\/\//i.test(value) ? value : "https://" + value);
       const id = url.pathname.replace(/^\//, "").replace(/\/$/, "");
-      return ["http:", "https:"].includes(url.protocol) && ["postimg.cc", "www.postimg.cc"].includes(url.hostname) && ID.test(id) ? id : null;
+      return ["http:", "https:"].includes(url.protocol) && ["ibb.co", "www.ibb.co"].includes(url.hostname) && ID.test(id) ? id : null;
     } catch {
       return null;
     }
@@ -644,18 +644,18 @@
   var encodeImageLinks = (text) => text.replace(URL_PATTERN, (_, id) => `{img:${id}}`);
   var imageIds = (text) => [...new Set([...text.matchAll(TOKEN)].map((m) => m[1]))];
   function savedImages(key) {
-    const ids = store.get("t7Postimages:" + key);
+    const ids = store.get("t7Images:" + key);
     return Array.isArray(ids) ? [...new Set(ids.filter((id) => typeof id === "string" && ID.test(id)))] : [];
   }
   function rememberImages(text) {
     const ids = imageIds(text);
     if (!ids.length) return;
-    store.set("t7Postimages:recent", [...ids.reverse(), ...savedImages("recent").filter((id) => !ids.includes(id))].slice(0, 10));
+    store.set("t7Images:recent", [...ids.reverse(), ...savedImages("recent").filter((id) => !ids.includes(id))].slice(0, 10));
     document.dispatchEvent(new Event("t7-image-library-change"));
   }
   function toggleFavorite(id) {
     const ids = savedImages("favorites");
-    store.set("t7Postimages:favorites", ids.includes(id) ? ids.filter((item) => item !== id) : [id, ...ids]);
+    store.set("t7Images:favorites", ids.includes(id) ? ids.filter((item) => item !== id) : [id, ...ids]);
     document.dispatchEvent(new Event("t7-image-library-change"));
   }
   var requests = /* @__PURE__ */ new Map();
@@ -704,13 +704,13 @@
     const request = new Promise((resolve, reject) => {
       waiting.push(() => new Promise((done) => {
         const fail = () => {
-          reject(new Error("\u041E\u0448\u0438\u0431\u043A\u0430 Postimages"));
+          reject(new Error("\u041E\u0448\u0438\u0431\u043A\u0430 imgBB"));
           done();
         };
         try {
           GM_xmlhttpRequest({
             method: "GET",
-            url: "https://postimg.cc/" + id,
+            url: "https://ibb.co/" + id,
             timeout: 15e3,
             onerror: fail,
             ontimeout: fail,
@@ -720,14 +720,14 @@
                 if (response.status !== 200) throw new Error();
                 const page = new DOMParser().parseFromString(response.responseText, "text/html");
                 const candidates = [
-                  page.querySelector("#main-image")?.getAttribute("src"),
+                  page.querySelector("#image-viewer-container img")?.getAttribute("src"),
                   page.querySelector('link[rel="image_src"]')?.getAttribute("href"),
                   page.querySelector('meta[property="og:image"]')?.getAttribute("content")
                 ];
                 const src = candidates.find((value) => {
                   try {
                     const u = new URL(value);
-                    return u.protocol === "https:" && u.hostname === "i.postimg.cc";
+                    return u.protocol === "https:" && u.hostname === "i.ibb.co";
                   } catch {
                     return false;
                   }
@@ -767,7 +767,7 @@
       if (card.isConnected) image.src = src;
     }, () => {
       if (card.isConnected) {
-        errorText(card, "\u041E\u0448\u0438\u0431\u043A\u0430 Postimages");
+        errorText(card, "\u041E\u0448\u0438\u0431\u043A\u0430 imgBB");
         stickFrom2(card);
       }
     });
@@ -778,11 +778,11 @@
     card.className = "t7-image-card";
     card.style.setProperty("--t7-image-height", imagePrefs().height + "px");
     const link = document.createElement("a");
-    link.href = "https://postimg.cc/" + id;
+    link.href = "https://ibb.co/" + id;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     const image = document.createElement("img");
-    image.alt = "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435 Postimages";
+    image.alt = "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435 imgBB";
     image.referrerPolicy = "no-referrer";
     image.addEventListener("load", () => {
       if (image.naturalHeight) card.style.setProperty("--t7-image-width", imagePrefs().height * image.naturalWidth / image.naturalHeight + "px");
@@ -842,7 +842,7 @@
         if (mode === "image") fragment.append(imageCard(match[1], stickFrom2));
         else {
           const link = document.createElement("a");
-          link.href = "https://postimg.cc/" + match[1];
+          link.href = "https://ibb.co/" + match[1];
           link.textContent = link.href;
           link.target = "_blank";
           link.rel = "noopener noreferrer";
@@ -1810,9 +1810,9 @@
                 <label class="t7-chk"><input type="checkbox" class="t7-pastes-enabled"> \u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u043A\u043D\u043E\u043F\u043A\u0443 \u043F\u0430\u0441\u0442 \u0432 \u0447\u0430\u0442\u0435</label>
             </details>
             <details class="t7-sec">
-                <summary>\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F Postimages</summary>
+                <summary>\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F imgBB</summary>
                 <label class="t7-fl">\u041E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435<select class="t7-images-mode"><option value="off">\u0412\u044B\u043A\u043B\u044E\u0447\u0435\u043D\u043E</option><option value="link">\u041A\u043B\u0438\u043A\u0430\u0431\u0435\u043B\u044C\u043D\u0430\u044F \u0441\u0441\u044B\u043B\u043A\u0430</option><option value="image">\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0430 / GIF</option></select></label>
-                <label class="t7-chk"><input type="checkbox" class="t7-images-button"> \u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u043A\u043D\u043E\u043F\u043A\u0443 Postimages \u0440\u044F\u0434\u043E\u043C \u0441 7TV</label>
+                <label class="t7-chk"><input type="checkbox" class="t7-images-button"> \u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u043A\u043D\u043E\u043F\u043A\u0443 imgBB \u0440\u044F\u0434\u043E\u043C \u0441 7TV</label>
                 <label class="t7-fl">\u041C\u0430\u043A\u0441\u0438\u043C\u0430\u043B\u044C\u043D\u0430\u044F \u0432\u044B\u0441\u043E\u0442\u0430 \u043A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 (px)<input type="number" class="t7-images-height" min="60" max="1000" step="10"></label>
             </details>
             <details class="t7-sec">
@@ -2472,9 +2472,9 @@
     dialog.className = "t7-paste-dialog t7-image-dialog";
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
-    dialog.setAttribute("aria-label", "\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 Postimages");
-    dialog.innerHTML = `<div class="t7-paste-header"><b>\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 Postimages</b><button type="button" class="t7-paste-close" aria-label="\u0417\u0430\u043A\u0440\u044B\u0442\u044C">\xD7</button></div>
-        <div class="t7-image-url-row"><a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" title="\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u043D\u0430 Postimages" aria-label="\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u043D\u0430 Postimages">\u2197</a><input type="text" class="t7-image-url" placeholder="https://postimg.cc/\u043A\u043E\u0434" aria-label="\u0421\u0441\u044B\u043B\u043A\u0430 Postimages"></div>
+    dialog.setAttribute("aria-label", "\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 imgBB");
+    dialog.innerHTML = `<div class="t7-paste-header"><b>\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 imgBB</b><button type="button" class="t7-paste-close" aria-label="\u0417\u0430\u043A\u0440\u044B\u0442\u044C">\xD7</button></div>
+        <div class="t7-image-url-row"><a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" title="\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u043D\u0430 imgBB" aria-label="\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u043D\u0430 imgBB">\u2197</a><input type="text" class="t7-image-url" placeholder="https://ibb.co/\u043A\u043E\u0434" aria-label="\u0421\u0441\u044B\u043B\u043A\u0430 imgBB"></div>
         <div class="t7-image-preview" aria-live="polite"></div>
         <div class="t7-image-actions"><button type="button" class="t7-b" data-action="insert" disabled>\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C</button><button type="button" class="t7-b" data-action="send" disabled>\u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C</button></div>
         <div class="t7-views" role="tablist"><button type="button" role="tab" data-tab="recent" aria-selected="true">\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 10</button><button type="button" role="tab" data-tab="favorites" aria-selected="false">\u0418\u0437\u0431\u0440\u0430\u043D\u043D\u044B\u0435</button></div>
@@ -2498,7 +2498,7 @@
         choose.className = "t7-b";
         choose.textContent = "\u0412\u044B\u0431\u0440\u0430\u0442\u044C";
         choose.onclick = () => {
-          url.value = "https://postimg.cc/" + id;
+          url.value = "https://ibb.co/" + id;
           updatePreview();
         };
         item.append(card, choose);
@@ -2839,8 +2839,8 @@
         const imagesButton = document.createElement("button");
         imagesButton.type = "button";
         imagesButton.className = "t7-btn t7-images-btn";
-        imagesButton.textContent = "Postimages";
-        imagesButton.title = "\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 Postimages";
+        imagesButton.textContent = "imgBB";
+        imagesButton.title = "\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0438 imgBB";
         imagesButton.setAttribute("aria-haspopup", "dialog");
         const prefs = imagePrefs();
         imagesButton.hidden = !prefs.button || prefs.mode === "off";
