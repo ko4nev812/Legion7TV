@@ -1,5 +1,6 @@
 // Единые настройки вкладок для отдельных чатов города и шахты.
 import { pingSystem } from './pingSystem.js';
+import { mutatePreservingScroll } from './scrollState.js';
 import { store } from '../core/store.js';
 import { SAY_RE, sendWithLinks } from './links.js';
 import { getChatTabPrefs } from './prefs.js';
@@ -612,8 +613,6 @@ function wrapDm(v) {
                 context = `${String(ctx && ctx.me && ctx.me() || '').toLowerCase()}|${String(ctx && ctx.ch || '').toLowerCase()}`;
             } catch (e) {}
             const list = context && context === lastContext ? document.querySelector('.dm-l') : null;
-            const scrollTop = list ? list.scrollTop : 0;
-            const atEnd = list && list.scrollHeight - list.scrollTop - list.clientHeight < 40;
             let dmContext = ctx;
             if (ctx && typeof ctx.api === 'function') {
                 const api = ctx.api.bind(ctx);
@@ -631,8 +630,9 @@ function wrapDm(v) {
             }
             const args = [...arguments];
             args[0] = dmContext;
-            const result = init.apply(this, args);
-            if (list && list.isConnected) list.scrollTop = atEnd ? list.scrollHeight : scrollTop;
+            let result;
+            if (list && list.isConnected) mutatePreservingScroll(list, () => { result = init.apply(this, args); });
+            else result = init.apply(this, args);
             lastContext = context;
             return result;
         }

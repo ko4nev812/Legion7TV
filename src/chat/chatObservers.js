@@ -7,7 +7,7 @@ function contains(node, selector) {
 }
 
 export function startChatObservers() {
-    let queued = false;
+    let buttonsQueued = false;
     let needsButtons = false;
     let needsScan = false;
 
@@ -27,16 +27,16 @@ export function startChatObservers() {
             }
         }
 
-        if ((!needsButtons && !needsScan) || queued) return;
-        queued = true;
-        requestAnimationFrame(() => {
-            queued = false;
-            const addButtons = needsButtons;
-            const scanMessages = needsScan;
-            needsButtons = false;
+        if (needsScan) {
             needsScan = false;
-            if (addButtons) ensureButtons();
-            if (scanMessages) scan();
+            scan();
+        }
+        if (!needsButtons || buttonsQueued) return;
+        buttonsQueued = true;
+        requestAnimationFrame(() => {
+            buttonsQueued = false;
+            needsButtons = false;
+            ensureButtons();
         });
     };
 

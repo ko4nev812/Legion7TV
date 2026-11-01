@@ -5,12 +5,11 @@ import { fetchImg } from '../emotes/imgcache.js';
 import { reusableUrlsFor, urlFor } from '../emotes/emotes.js';
 import { setEmoteTooltipData } from '../emotes/tooltip.js';
 
-function makeImg(name, em, cls, stickFrom) {
+function makeImg(name, em, cls) {
     const img = document.createElement('img');
     img.className = cls;
     img.alt = name;
     if (cls === 't7-e') setEmoteTooltipData(img, name, em);
-    img.addEventListener('load', () => stickFrom(img));
     const resolution = SIZES[S.size].n;
     fetchImg(urlFor(em, resolution), true, reusableUrlsFor(em, resolution)).then(
         (data) => { img.src = data; },
@@ -22,7 +21,7 @@ function makeImg(name, em, cls, stickFrom) {
     return img;
 }
 
-export function processEmotes({ content, kind, source, stickFrom }) {
+export function processEmotes({ content, kind, source }) {
     if (kind !== 'message') return;
 
     const parts = source.split(/(\s+)/);
@@ -33,13 +32,13 @@ export function processEmotes({ content, kind, source, stickFrom }) {
     for (const part of parts) {
         const emote = has(EM, part) ? EM[part] : null;
         if (emote && emote.zw && lastWrap) {
-            lastWrap.appendChild(makeImg(part, emote, 't7-zw', stickFrom));
+            lastWrap.appendChild(makeImg(part, emote, 't7-zw'));
             continue;
         }
         if (emote) {
             const wrapper = document.createElement('span');
             wrapper.className = 't7-w';
-            wrapper.appendChild(makeImg(part, emote, 't7-e', stickFrom));
+            wrapper.appendChild(makeImg(part, emote, 't7-e'));
             fragment.appendChild(wrapper);
             lastWrap = wrapper;
             continue;

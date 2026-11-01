@@ -260,7 +260,7 @@ function markSize(pop) {
 function setupDrag(pop) {
     const hd = pop.querySelector('.t7-h');
     hd.addEventListener('pointerdown', (e) => {
-        if (e.target.closest('button') || e.button > 0) return;   // кнопки в заголовке остаются кнопками
+        if (e.target.closest('button') || e.button !== 0 || !e.isPrimary) return;   // кнопки в заголовке остаются кнопками
         const r = pop.getBoundingClientRect();
         const sx = e.clientX, sy = e.clientY, pid = e.pointerId;
         let started = false, nx = r.left, ny = r.top, raf = 0;
@@ -280,6 +280,8 @@ function setupDrag(pop) {
             try { hd.setPointerCapture(pid); } catch {}
         };
         const move = (ev) => {
+            if (ev.pointerId !== pid) return;
+            if (ev.pointerType === 'mouse' && !(ev.buttons & 1)) { up(); return; }
             if (!started) {
                 if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < 4) return;   // ещё просто клик
                 start();
@@ -289,9 +291,10 @@ function setupDrag(pop) {
             if (!raf) raf = requestAnimationFrame(apply);
         };
         const up = () => {
-            hd.removeEventListener('pointermove', move);
-            hd.removeEventListener('pointerup', up);
-            hd.removeEventListener('pointercancel', up);
+            removeEventListener('pointermove', move);
+            removeEventListener('pointerup', up);
+            removeEventListener('pointercancel', up);
+            removeEventListener('blur', up);
             if (raf) cancelAnimationFrame(raf);
             if (!started || st.pop !== pop) return;
             pop.classList.remove('t7-drag');
@@ -299,9 +302,10 @@ function setupDrag(pop) {
             store.set(STORE.popupPosition, st.pos);
             place();   // один раз: переносит transform в left/top и пересчитывает высоту
         };
-        hd.addEventListener('pointermove', move);
-        hd.addEventListener('pointerup', up);
-        hd.addEventListener('pointercancel', up);
+        addEventListener('pointermove', move);
+        addEventListener('pointerup', up);
+        addEventListener('pointercancel', up);
+        addEventListener('blur', up);
     });
     // двойной клик по заголовку - вернуть позицию и размер по умолчанию
     hd.addEventListener('dblclick', (e) => {
@@ -318,7 +322,7 @@ function setupDrag(pop) {
 function setupResize(pop) {
     const rs = pop.querySelector('.t7-rs');
     rs.addEventListener('pointerdown', (e) => {
-        if (e.button > 0) return;
+        if (e.button !== 0 || !e.isPrimary) return;
         e.preventDefault();
         e.stopPropagation();
         const r = pop.getBoundingClientRect();
@@ -338,14 +342,17 @@ function setupResize(pop) {
             pop.style.height = h + 'px';
         };
         const move = (ev) => {
+            if (ev.pointerId !== e.pointerId) return;
+            if (ev.pointerType === 'mouse' && !(ev.buttons & 1)) { up(); return; }
             w = clamp(r.width + ev.clientX - sx, 240, Math.max(240, innerWidth - r.left - 8));
             h = clamp(r.height + ev.clientY - sy, mh, Math.max(mh, innerHeight - r.top - 8));
             if (!raf) raf = requestAnimationFrame(apply);
         };
         const up = () => {
-            rs.removeEventListener('pointermove', move);
-            rs.removeEventListener('pointerup', up);
-            rs.removeEventListener('pointercancel', up);
+            removeEventListener('pointermove', move);
+            removeEventListener('pointerup', up);
+            removeEventListener('pointercancel', up);
+            removeEventListener('blur', up);
             if (raf) cancelAnimationFrame(raf);
             if (st.pop !== pop) return;
             pop.classList.remove('t7-drag');
@@ -355,9 +362,10 @@ function setupResize(pop) {
             store.set(STORE.popupPosition, st.pos);
             place();
         };
-        rs.addEventListener('pointermove', move);
-        rs.addEventListener('pointerup', up);
-        rs.addEventListener('pointercancel', up);
+        addEventListener('pointermove', move);
+        addEventListener('pointerup', up);
+        addEventListener('pointercancel', up);
+        addEventListener('blur', up);
     });
 }
 
@@ -381,12 +389,12 @@ function openPop(btn) {
     setupDrag(pop);
     setupResize(pop);
 
-    pop.querySelector('.t7-x').onclick = () => {
+    pop.querySelector('.t7-x').addEventListener('click', () => {
         const a = st.anchor;
         closePop();
         if (a) a.focus({ preventScroll: true });
-    };
-    pop.querySelector('.t7-g').onclick = openSettings;
+    });
+    pop.querySelector('.t7-g').addEventListener('click', openSettings);
     pop.querySelector('.t7-q').addEventListener('input', filterGrid);
     gridMode = 'all';
     pop.querySelector('.t7-views').addEventListener('click', (e) => {

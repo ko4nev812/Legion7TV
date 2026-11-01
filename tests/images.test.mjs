@@ -2,15 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveImage, imageToken, imageId, imageIds, encodeImageLinks } from '../src/chat/images.js';
 
-test('imgBB tokens use a host namespace and accept legacy messages', () => {
-    assert.equal(imageToken('Ab123'), '{imgbb:Ab123}');
-    assert.equal(encodeImageLinks('https://ibb.co/Ab123'), '{imgbb:Ab123}');
-    assert.equal(encodeImageLinks('{img:Ab123}'), '{imgbb:Ab123}');
+test('imgBB uses plain links and accepts legacy messages', () => {
+    assert.equal(imageToken('Ab123'), 'https://ibb.co/Ab123');
+    assert.equal(encodeImageLinks('https://ibb.co/Ab123'), 'https://ibb.co/Ab123');
+    assert.equal(encodeImageLinks('{img:Ab123}'), 'https://ibb.co/Ab123');
     assert.equal(imageId('{imgbb:Ab123}'), 'Ab123');
     assert.equal(imageId('{img:Ab123}'), 'Ab123');
     assert.equal(imageId('{other:Ab123}'), null);
     assert.deepEqual(imageIds('{img:Old1} {imgbb:New2} {other:Skip3} {imgbb:Old1}'), ['Old1', 'New2']);
-    assert.equal(encodeImageLinks('{imgbb:Ab123} https://example.org/Ab123'), '{imgbb:Ab123} https://example.org/Ab123');
+    assert.equal(encodeImageLinks('{imgbb:Ab123} https://example.org/Ab123'), 'https://ibb.co/Ab123 https://example.org/Ab123');
+    assert.deepEqual(imageIds('https://ibb.co/Ab123 [ref]{ibb_co/Old1} {imgbb:New2}'), ['Ab123', 'Old1', 'New2']);
+    const direct = 'https://i.ibb.co/Ab123/original.gif';
+    assert.equal(imageId(direct), direct);
+    assert.equal(imageToken(direct), direct);
+    assert.deepEqual(imageIds(direct + '.'), [direct]);
 });
 
 test('imgBB downloads use CSP-compatible blob URLs and preserve GIF bytes', async (t) => {
@@ -58,6 +63,10 @@ test('imgBB downloads use CSP-compatible blob URLs and preserve GIF bytes', asyn
     assert.equal(requests[1].url, 'https://i.ibb.co/test/original.gif');
     assert.equal(requests[1].responseType, 'arraybuffer');
     assert.equal(await resolveImage('gifTest'), url, 'completed downloads are reused');
+    const direct = await resolveImage('https://i.ibb.co/test/direct.gif');
+    urls.push(direct);
+    assert(direct.startsWith('blob:'));
+    assert.equal(requests.length, 3, 'direct image URLs need no HTML page request');
 
     for (const mode of ['missing', 'html', 'empty', 'timeout']) {
         binaryMode = mode;

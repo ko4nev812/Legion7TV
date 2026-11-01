@@ -1,10 +1,19 @@
 import { store } from '../core/store.js';
+import { mutatePreservingScroll } from './scrollState.js';
 
 const ID = /^[a-zA-Z0-9]{1,32}$/;
 // Each image host gets its own namespace. `img` is the legacy imgBB alias.
 const TOKEN = /\{(?:imgbb|img):([a-zA-Z0-9]{1,32})\}/g;
-export const imageToken = (id) => `{imgbb:${id}}`;
+export const imageToken = (id) => isDirectImage(id) ? id : 'https://ibb.co/' + id;
 const URL_PATTERN = /(?<![\w@./-])(?:https?:\/\/)?(?:www\.)?ibb\.co\/([a-zA-Z0-9]{1,32})\/?(?![a-zA-Z0-9/_-]|\.[a-zA-Z0-9])(?:[?#][^\s<>"']*)?/gi;
+const IMAGE_PATTERN = new RegExp(TOKEN.source + '|' + URL_PATTERN.source + '|\\[ref\\]\\{(?:www_)?ibb_co/([a-zA-Z0-9]{1,32})\\}|(https://i\\.ibb\\.co/[a-zA-Z0-9_-]+/[^\\s<>"\\\']+)', 'gi');
+function isDirectImage(value) {
+    try {
+        const url = new URL(value);
+        return url.protocol === 'https:' && url.hostname === 'i.ibb.co' && /^\/[a-zA-Z0-9_-]+\/[^/]+/.test(url.pathname);
+    } catch { return false; }
+}
+function matchId(match) { return match[1] || match[2] || match[3] || match[4]?.replace(/[.,!?;:)]+$/, ''); }
 export const imagePrefs = () => {
     const p = store.get('t7Images') || {};
     return { mode: ['off', 'link', 'image'].includes(p.mode) ? p.mode : 'image', button: p.button === true,
@@ -15,6 +24,7 @@ export function setImagePrefs(value) {
     document.dispatchEvent(new Event('t7-images-change'));
 }
 export function imageId(value) {
+    if (isDirectImage(value)) return value;
     const token = /^\{(?:imgbb|img):([a-zA-Z0-9]{1,32})\}$/.exec(String(value).trim());
     if (token) return token[1];
     try {
@@ -23,13 +33,11 @@ export function imageId(value) {
         return ['http:', 'https:'].includes(url.protocol) && ['ibb.co', 'www.ibb.co'].includes(url.hostname) && ID.test(id) ? id : null;
     } catch { return null; }
 }
-export const encodeImageLinks = (text) => text
-    .replace(TOKEN, (_, id) => imageToken(id))
-    .replace(URL_PATTERN, (_, id) => imageToken(id));
-export const imageIds = (text) => [...new Set([...text.matchAll(TOKEN)].map((m) => m[1]))];
+export const encodeImageLinks = (text) => text.replace(IMAGE_PATTERN, (raw, legacy, url, ref, direct) => direct || imageToken(legacy || url || ref));
+export const imageIds = (text) => [...new Set([...text.matchAll(IMAGE_PATTERN)].map(matchId))];
 export function savedImages(key) {
     const ids = store.get('t7Images:' + key);
-    return Array.isArray(ids) ? [...new Set(ids.filter((id) => typeof id === 'string' && ID.test(id)))] : [];
+    return Array.isArray(ids) ? [...new Set(ids.filter((id) => typeof id === 'string' && (ID.test(id) || isDirectImage(id))))] : [];
 }
 export function rememberImages(text) {
     const ids = imageIds(text);
@@ -75,12 +83,16 @@ function downloadImage(src) {
 }
 
 export function resolveImage(id) {
-    if (!ID.test(id)) return Promise.reject(new Error('Неверная ссылка'));
+    if (!ID.test(id) && !isDirectImage(id)) return Promise.reject(new Error('Неверная ссылка'));
     if (requests.has(id)) return requests.get(id);
     const request = new Promise((resolve, reject) => {
         waiting.push(() => new Promise((done) => {
             const fail = () => { reject(new Error('Ошибка imgBB')); done(); };
             try {
+                if (isDirectImage(id)) {
+                    downloadImage(id).then(resolve, reject).finally(done);
+                    return;
+                }
                 GM_xmlhttpRequest({ method: 'GET', url: 'https://ibb.co/' + id, timeout: 15000,
                     onerror: fail, ontimeout: fail, onabort: fail,
                     async onload(response) {
@@ -121,28 +133,32 @@ function loadCard(card) {
     const data = lazyImages.get(card);
     if (!data) return;
     lazyImages.delete(card);
-    const { id, image, stickFrom } = data;
-    resolveImage(id).then((src) => { if (card.isConnected) image.src = src; }, () => {
-        if (card.isConnected) { errorText(card, 'Ошибка imgBB'); stickFrom(card); }
+    const { id, image, link } = data;
+    resolveImage(id).then(async (src) => {
+        if (!card.isConnected) return;
+        image.src = src;
+        await image.decode();
+        if (!card.isConnected) return;
+        mutatePreservingScroll(card, () => {
+            if (image.naturalHeight) card.style.setProperty('--t7-image-width', (imagePrefs().height * image.naturalWidth / image.naturalHeight) + 'px');
+            link.replaceChildren(image);
+        });
+    }).catch(() => {
+        if (card.isConnected) mutatePreservingScroll(card, () => errorText(card, 'Ошибка imgBB'));
     });
 }
-export function imageCard(id, stickFrom = () => {}) {
+export function imageCard(id) {
     const card = document.createElement('span');
     card.className = 't7-image-card';
     card.style.setProperty('--t7-image-height', imagePrefs().height + 'px');
     const link = document.createElement('a');
-    link.href = 'https://ibb.co/' + id;
+    link.href = imageToken(id);
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     const image = document.createElement('img');
     image.alt = 'Изображение imgBB';
     image.referrerPolicy = 'no-referrer';
-    image.addEventListener('load', () => {
-        if (image.naturalHeight) card.style.setProperty('--t7-image-width', (imagePrefs().height * image.naturalWidth / image.naturalHeight) + 'px');
-        stickFrom(card);
-    });
-    image.addEventListener('error', () => { errorText(card, 'Ошибка изображения'); stickFrom(card); });
-    link.append(image);
+    link.textContent = 'Загрузка…';
     const star = document.createElement('button');
     star.type = 'button';
     star.className = 't7-image-star';
@@ -156,7 +172,7 @@ export function imageCard(id, stickFrom = () => {}) {
     update();
     star.onclick = (event) => { event.preventDefault(); event.stopPropagation(); toggleFavorite(id); update(); };
     card.append(link, star);
-    lazyImages.set(card, { id, image, stickFrom });
+    lazyImages.set(card, { id, image, link });
     if (!observer) observer = new IntersectionObserver((entries) => {
         for (const entry of entries) {
             if (!entry.target.isConnected) { observer.unobserve(entry.target); lazyImages.delete(entry.target); }
@@ -166,26 +182,28 @@ export function imageCard(id, stickFrom = () => {}) {
     observer.observe(card);
     return card;
 }
-export function processImages({ content, kind, stickFrom }) {
+export function processImages({ content, kind }) {
     const mode = imagePrefs().mode;
     if (kind !== 'message' || mode === 'off') return;
     const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
     const nodes = [];
     while (walker.nextNode()) if (!walker.currentNode.parentElement.closest('a')) nodes.push(walker.currentNode);
     for (const node of nodes) {
-        const matches = [...node.nodeValue.matchAll(TOKEN)];
+        const matches = [...node.nodeValue.matchAll(IMAGE_PATTERN)];
         if (!matches.length) continue;
         const fragment = document.createDocumentFragment();
         let offset = 0;
         for (const match of matches) {
+            const id = matchId(match);
             fragment.append(document.createTextNode(node.nodeValue.slice(offset, match.index)));
-            if (mode === 'image') fragment.append(imageCard(match[1], stickFrom));
+            if (mode === 'image') fragment.append(imageCard(id));
             else {
                 const link = document.createElement('a');
-                link.href = 'https://ibb.co/' + match[1]; link.textContent = link.href;
+                link.href = imageToken(id); link.textContent = link.href;
                 link.target = '_blank'; link.rel = 'noopener noreferrer'; fragment.append(link);
             }
             offset = match.index + match[0].length;
+            if (match[4] && match[4].length > id.length) fragment.append(document.createTextNode(match[4].slice(id.length)));
         }
         fragment.append(document.createTextNode(node.nodeValue.slice(offset)));
         node.replaceWith(fragment);

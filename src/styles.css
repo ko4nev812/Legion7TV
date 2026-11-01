@@ -227,8 +227,8 @@ form.cy-chat-f>.t7-banword-warning[hidden]{display:none}
 .cy-chat-l a.t7-link{color:#8edbff;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .cy-chat-tabs>button[data-tab][hidden]{display:none!important}
 /* Фиксация якоря прокрутки для контейнера личных сообщений и чата */
-.cy-chat-dmx, .cy-chat-l {
-  overflow-anchor: auto;
+.cy-chat-dmx, .cy-chat-l, .dm-l {
+  overflow-anchor: none;
 }
 
 /* Запрещаем браузеру самовольно дергать размеры картинок при вставке */

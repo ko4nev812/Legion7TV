@@ -122,7 +122,7 @@ export function openImagePicker(input, anchor = input?.closest('form')?.querySel
             const card = imageCard(id);
             const choose = document.createElement('button');
             choose.type = 'button'; choose.className = 't7-b'; choose.textContent = 'Выбрать';
-            choose.onclick = () => { url.value = 'https://ibb.co/' + id; updatePreview(); };
+            choose.onclick = () => { url.value = imageToken(id); updatePreview(); };
             item.append(card, choose); library.append(item);
         }
     };
