@@ -2,7 +2,7 @@
 // @author       ProCto_Fliy
 // @name         Legion chat extentions (7TV, более удобный чат и тд)
 // @namespace    https://play.multidonate.ru/
-// @version      4.11.1
+// @version      4.11.2
 // @description  Эмоуты 7TV в чате: кнопка 7TV, ник стримера, размер, список эмоутов, быстрый кеш
 // @match        https://play.multidonate.ru/*
 // @icon         https://cdn.7tv.app/emote/01F71VQYHR000D3ZZ6Q11NR7TV/2x.webp
@@ -616,6 +616,12 @@
   }
   var scrollStates = /* @__PURE__ */ new WeakMap();
   var scrollListSelector = `${SEL.chatList}, .cy-chat-dmx, .dm-l`;
+  function messageKey(row) {
+    const content = row.querySelector?.(SEL.messageContent + "[data-l7tv-emote-source]") || [...row.querySelectorAll?.(SEL.messageContent) || []].at(-1);
+    const source = content?.dataset?.l7tvEmoteSource ?? content?.textContent ?? row.textContent;
+    const header = [...row.children || []].filter((child) => child !== content).map((child) => child.textContent);
+    return JSON.stringify([row.dataset?.id || "", source, header]);
+  }
   function getScrollContainer(element) {
     let fallback = null;
     for (let node = element; node && node.nodeType === 1; node = node.parentElement) {
@@ -648,6 +654,7 @@
       return;
     }
     const wasAtEnd = isAtEnd(list);
+    const previousTop = list.scrollTop;
     const listRect = list.getBoundingClientRect();
     const rowList = element.matches && element.matches(scrollListSelector) ? element : element.closest && element.closest(scrollListSelector);
     const candidates = rowList && rowList.children.length ? rowList.children : list.children;
@@ -656,11 +663,16 @@
       return rect.bottom > listRect.top && rect.top < listRect.bottom;
     });
     const anchorTop = anchor && anchor.getBoundingClientRect().top;
+    const anchorKey = anchor && messageKey(anchor);
+    const anchorIndex = anchor && [...candidates].slice(0, [...candidates].indexOf(anchor)).filter((row) => messageKey(row) === anchorKey).length;
     mutate();
     if (wasAtEnd) {
       scrollToEnd(list);
-    } else if (anchor && anchor.isConnected) {
-      list.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
+    } else if (anchor) {
+      const nextRows = rowList?.isConnected ? rowList.children : list.children;
+      const replacement = anchor.isConnected ? anchor : [...nextRows].filter((row) => messageKey(row) === anchorKey)[anchorIndex];
+      const top = replacement ? list.scrollTop + replacement.getBoundingClientRect().top - anchorTop : previousTop;
+      if (top !== list.scrollTop) list.scrollTo({ top, behavior: "instant" });
     }
     getScrollState(list).atEnd = isAtEnd(list);
   }
@@ -1068,6 +1080,27 @@
   }
   var processors = [];
   var SOURCE_KEY = "l7tvEmoteSource";
+  var renderedMessages = /* @__PURE__ */ new WeakMap();
+  function reuseMessage(message, content) {
+    const list = message.closest(".cy-chat-l, .dm-l, .cy-chat-dmx");
+    if (!list) return false;
+    let cache = renderedMessages.get(list);
+    if (!cache) {
+      cache = /* @__PURE__ */ new Map();
+      renderedMessages.set(list, cache);
+    }
+    const key = messageKey(message);
+    const entries = cache.get(key) || [];
+    const previous = entries.find((element) => element !== content && !element.isConnected);
+    if (previous) {
+      content.dataset[SOURCE_KEY] = previous.dataset[SOURCE_KEY];
+      content.replaceChildren(...previous.childNodes);
+    }
+    cache.delete(key);
+    cache.set(key, [...entries.filter((element) => element !== previous && element.isConnected), content].slice(-20));
+    while (cache.size > Math.max(300, list.children.length + 20)) cache.delete(cache.keys().next().value);
+    return !!previous;
+  }
   function registerChatProcessor(processor) {
     if (typeof processor === "function" && !processors.includes(processor)) processors.push(processor);
   }
@@ -1099,6 +1132,10 @@
     const source = kind === "message" ? content.dataset[SOURCE_KEY] != null ? content.dataset[SOURCE_KEY] : content.dataset.t7o != null ? content.dataset.t7o : content.textContent : content.textContent;
     if (kind === "message") {
       content.dataset[SOURCE_KEY] = source;
+      if (reuseMessage(message, content)) {
+        message.dataset.l7tvProcessed = "1";
+        return;
+      }
       content.replaceChildren(document.createTextNode(source));
     }
     message.dataset.l7tvProcessed = "1";
@@ -1118,6 +1155,7 @@
     if (dmLists.size) stickEnds(dmLists);
   }
   function rescanAll() {
+    renderedMessages = /* @__PURE__ */ new WeakMap();
     document.querySelectorAll(`${SEL.processedChatRows}, ${SEL.processedDmRows}`).forEach((message) => {
       delete message.dataset.l7tvProcessed;
     });
@@ -3084,7 +3122,7 @@
   var pingArchiveSaveTimer = 0;
   var hasUnifiedChat = () => !!rooms.one.instance;
   pingSystem.subscribe(() => {
-    for (const room of Object.values(rooms)) if (room.instance) room.instance.raw.render();
+    for (const room of Object.values(rooms)) if (room.instance) room.instance.render();
   });
   var tagMn = (m) => m && m.tb !== "mn" ? { ...m, tb: "mn" } : m;
   var tagMsg = (r) => r && r.msg ? { ...r, msg: tagMn(r.msg) } : r;
@@ -3293,7 +3331,7 @@
   function refreshPingArchive(room) {
     const i = rooms[room].instance;
     if (!i) return;
-    if (syncPingArchive(room)) i.raw.render();
+    if (syncPingArchive(room)) i.render();
     markFilteredMessages(room);
     applyPingOnly(room);
     updatePingArchiveControl(room);
@@ -3515,8 +3553,22 @@
   function wrapInst(raw, K, room) {
     const mine = room === "mine";
     const unified = !!K.one;
+    const update = (callback) => {
+      const list = K.state()?.el?.querySelector(SEL.chatList);
+      let result;
+      const render = () => {
+        result = callback();
+        scan();
+      };
+      if (list && list.isConnected) mutatePreservingScroll(list, render);
+      else render();
+      return result;
+    };
     return {
       ...raw,
+      render(...args) {
+        return update(() => raw.render(...args));
+      },
       init() {
         raw.init();
         setupTabs(K);
@@ -3547,7 +3599,7 @@
       },
       apply(d, rm) {
         if (unified) {
-          raw.apply(d, rm);
+          update(() => raw.apply(d, rm));
           if (d && Array.isArray(d.chat)) countPings(room, d.chat);
           if (d && Array.isArray(d.chatDel)) {
             const deleted = new Set(d.chatDel.map(String));
@@ -3563,7 +3615,7 @@
           return;
         }
         const own = d && Array.isArray(d.chat) && mine ? { ...d, chat: d.chat.map(tagMn) } : d;
-        raw.apply(own);
+        update(() => raw.apply(own));
         if (own && own.chat) countPings(room, own.chat);
         if (pingOnly) refreshPingArchive(room);
       }
@@ -3580,7 +3632,9 @@
         const KK = patchK(K, room);
         const raw = make(KK);
         rooms[room].instance = { raw, K: KK };
-        return wrapInst(raw, KK, room);
+        const wrapped = wrapInst(raw, KK, room);
+        rooms[room].instance.render = wrapped.render;
+        return wrapped;
       }
     };
     w.__t7 = 1;
@@ -3658,6 +3712,7 @@
         let result;
         if (list && list.isConnected) mutatePreservingScroll(list, () => {
           result = init.apply(this, args);
+          scan();
         });
         else result = init.apply(this, args);
         lastContext = context;

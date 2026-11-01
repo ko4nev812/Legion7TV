@@ -1,6 +1,7 @@
 // Единые настройки вкладок для отдельных чатов города и шахты.
 import { pingSystem } from './pingSystem.js';
 import { mutatePreservingScroll } from './scrollState.js';
+import { scan } from './chat.js';
 import { store } from '../core/store.js';
 import { SAY_RE, sendWithLinks } from './links.js';
 import { getChatTabPrefs } from './prefs.js';
@@ -38,7 +39,7 @@ let pingArchiveSaveTimer = 0;
 const hasUnifiedChat = () => !!rooms.one.instance;
 
 pingSystem.subscribe(() => {
-    for (const room of Object.values(rooms)) if (room.instance) room.instance.raw.render();
+    for (const room of Object.values(rooms)) if (room.instance) room.instance.render();
 });
 
 const tagMn = (m) => (m && m.tb !== 'mn' ? { ...m, tb: 'mn' } : m);
@@ -261,7 +262,7 @@ function syncPingArchive(room) {
 function refreshPingArchive(room) {
     const i = rooms[room].instance;
     if (!i) return;
-    if (syncPingArchive(room)) i.raw.render();
+    if (syncPingArchive(room)) i.render();
     markFilteredMessages(room);
     applyPingOnly(room);
     updatePingArchiveControl(room);
@@ -490,8 +491,17 @@ function pingBind(room) {
 function wrapInst(raw, K, room) {
     const mine = room === 'mine';
     const unified = !!K.one;
+    const update = (callback) => {
+        const list = K.state()?.el?.querySelector(SEL.chatList);
+        let result;
+        const render = () => { result = callback(); scan(); };
+        if (list && list.isConnected) mutatePreservingScroll(list, render);
+        else render();
+        return result;
+    };
     return {
         ...raw,
+        render(...args) { return update(() => raw.render(...args)); },
         init() { raw.init(); setupTabs(K); pingBind(room); },
         enter(r, rm) {
             if (unified) {
@@ -518,7 +528,7 @@ function wrapInst(raw, K, room) {
         },
         apply(d, rm) {
             if (unified) {
-                raw.apply(d, rm);
+                update(() => raw.apply(d, rm));
                 if (d && Array.isArray(d.chat)) countPings(room, d.chat);
                 if (d && Array.isArray(d.chatDel)) {
                     const deleted = new Set(d.chatDel.map(String));
@@ -534,7 +544,7 @@ function wrapInst(raw, K, room) {
                 return;
             }
             const own = d && Array.isArray(d.chat) && mine ? { ...d, chat: d.chat.map(tagMn) } : d;
-            raw.apply(own);
+            update(() => raw.apply(own));
             if (own && own.chat) countPings(room, own.chat);
             if (pingOnly) refreshPingArchive(room);
         }
@@ -552,7 +562,9 @@ function wrapChat(v) {
             const KK = patchK(K, room);
             const raw = make(KK);
             rooms[room].instance = { raw, K: KK };
-            return wrapInst(raw, KK, room);
+            const wrapped = wrapInst(raw, KK, room);
+            rooms[room].instance.render = wrapped.render;
+            return wrapped;
         }
     };
     w.__t7 = 1;
@@ -631,7 +643,7 @@ function wrapDm(v) {
             const args = [...arguments];
             args[0] = dmContext;
             let result;
-            if (list && list.isConnected) mutatePreservingScroll(list, () => { result = init.apply(this, args); });
+            if (list && list.isConnected) mutatePreservingScroll(list, () => { result = init.apply(this, args); scan(); });
             else result = init.apply(this, args);
             lastContext = context;
             return result;

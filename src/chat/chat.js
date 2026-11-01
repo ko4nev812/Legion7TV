@@ -5,10 +5,29 @@ import { processEmotes } from './chatEmotes.js';
 import { processLinks } from './links.js';
 import { processImages } from './images.js';
 import { processMentions } from './mentions.js';
-import { getScrollContainer, getScrollState, isAtEnd, scrollToEnd } from './scrollState.js';
+import { getScrollContainer, getScrollState, isAtEnd, scrollToEnd, messageKey } from './scrollState.js';
 
 const processors = [];
 const SOURCE_KEY = 'l7tvEmoteSource';
+let renderedMessages = new WeakMap();
+
+function reuseMessage(message, content) {
+    const list = message.closest('.cy-chat-l, .dm-l, .cy-chat-dmx');
+    if (!list) return false;
+    let cache = renderedMessages.get(list);
+    if (!cache) { cache = new Map(); renderedMessages.set(list, cache); }
+    const key = messageKey(message);
+    const entries = cache.get(key) || [];
+    const previous = entries.find((element) => element !== content && !element.isConnected);
+    if (previous) {
+        content.dataset[SOURCE_KEY] = previous.dataset[SOURCE_KEY];
+        content.replaceChildren(...previous.childNodes);
+    }
+    cache.delete(key);
+    cache.set(key, [...entries.filter((element) => element !== previous && element.isConnected), content].slice(-20));
+    while (cache.size > Math.max(300, list.children.length + 20)) cache.delete(cache.keys().next().value);
+    return !!previous;
+}
 export function registerChatProcessor(processor) {
     if (typeof processor === 'function' && !processors.includes(processor)) processors.push(processor);
 }
@@ -52,6 +71,7 @@ function processMessage(message, room) {
         : content.textContent;
     if (kind === 'message') {
         content.dataset[SOURCE_KEY] = source;
+        if (reuseMessage(message, content)) { message.dataset.l7tvProcessed = '1'; return; }
         content.replaceChildren(document.createTextNode(source));
     }
 
@@ -75,6 +95,7 @@ export function scan() {
 }
 
 export function rescanAll() {
+    renderedMessages = new WeakMap();
     document.querySelectorAll(`${SEL.processedChatRows}, ${SEL.processedDmRows}`)
         .forEach((message) => { delete message.dataset.l7tvProcessed; });
     scan();
