@@ -1,7 +1,7 @@
 // Ссылки в чате: отправка через [ref]{...}, разбор на приёме
 import { store } from '../core/store.js';
 import { STORE } from '../core/consts.js';
-import { imagePrefs, imageId, encodeImageLinks, rememberImages } from './images.js';
+import { imagePrefs, encodeImageLinks, rememberImages } from './images.js';
 
 export const SAY_RE = /^\/api\/(?:chat\/say|city\/say|mine\/chat\/say|dm\/say)(?:\?|$)/;
 const LINK_ENCODING_KEY = STORE.linkEncoding;
@@ -55,7 +55,6 @@ function encodeOne(raw) {
         stripQuotes: true,
         stripBrackets: true
     });
-    if (imagePrefs().mode !== 'off' && imageId(url)) return url + tail;
     url = url.replace(/^https:\/\//i, '');
     const i = url.search(/[/?#]/);
     const host = (i < 0 ? url : url.slice(0, i)).toLowerCase().replace(/\./g, '_');

@@ -2,7 +2,7 @@
 // @author       ProCto_Fliy
 // @name         Legion chat extentions (7TV, более удобный чат и тд)
 // @namespace    https://play.multidonate.ru/
-// @version      4.11.0
+// @version      4.11.1
 // @description  Эмоуты 7TV в чате: кнопка 7TV, ник стримера, размер, список эмоутов, быстрый кеш
 // @match        https://play.multidonate.ru/*
 // @icon         https://cdn.7tv.app/emote/01F71VQYHR000D3ZZ6Q11NR7TV/2x.webp
@@ -668,7 +668,7 @@
   var TOKEN = /\{(?:imgbb|img):([a-zA-Z0-9]{1,32})\}/g;
   var imageToken2 = (id) => isDirectImage(id) ? id : "https://ibb.co/" + id;
   var URL_PATTERN = /(?<![\w@./-])(?:https?:\/\/)?(?:www\.)?ibb\.co\/([a-zA-Z0-9]{1,32})\/?(?![a-zA-Z0-9/_-]|\.[a-zA-Z0-9])(?:[?#][^\s<>"']*)?/gi;
-  var IMAGE_PATTERN = new RegExp(TOKEN.source + "|" + URL_PATTERN.source + `|\\[ref\\]\\{(?:www_)?ibb_co/([a-zA-Z0-9]{1,32})\\}|(https://i\\.ibb\\.co/[a-zA-Z0-9_-]+/[^\\s<>"\\']+)`, "gi");
+  var IMAGE_PATTERN = new RegExp(TOKEN.source + "|" + URL_PATTERN.source + `|\\[ref\\]\\{(?:www_)?ibb_co/([a-zA-Z0-9]{1,32})\\}|(https://i\\.ibb\\.co/[a-zA-Z0-9_-]+/[^\\s<>"\\']+)|\\[ref\\]\\{(i_ibb_co/[a-zA-Z0-9_-]+/[^\\s{}]+)\\}`, "gi");
   function isDirectImage(value) {
     try {
       const url = new URL(value);
@@ -677,8 +677,11 @@
       return false;
     }
   }
+  function directRefUrl(body) {
+    return "https://" + body.replace(/^i_ibb_co\//i, "i.ibb.co/").replace(/%2E/gi, ".");
+  }
   function matchId(match) {
-    return match[1] || match[2] || match[3] || match[4]?.replace(/[.,!?;:)]+$/, "");
+    return match[1] || match[2] || match[3] || match[4]?.replace(/[.,!?;:)]+$/, "") || match[5] && directRefUrl(match[5]);
   }
   var imagePrefs = () => {
     const p = store.get("t7Images") || {};
@@ -704,7 +707,7 @@
       return null;
     }
   }
-  var encodeImageLinks = (text) => text.replace(IMAGE_PATTERN, (raw, legacy, url, ref, direct) => direct || imageToken2(legacy || url || ref));
+  var encodeImageLinks = (text) => text.replace(IMAGE_PATTERN, (raw, legacy, url, ref, direct, directRef) => direct || (directRef ? directRefUrl(directRef) : imageToken2(legacy || url || ref)));
   var imageIds = (text) => [...new Set([...text.matchAll(IMAGE_PATTERN)].map(matchId))];
   function savedImages(key) {
     const ids = store.get("t7Images:" + key);
@@ -964,7 +967,6 @@
       stripQuotes: true,
       stripBrackets: true
     });
-    if (imagePrefs().mode !== "off" && imageId(url)) return url + tail;
     url = url.replace(/^https:\/\//i, "");
     const i = url.search(/[/?#]/);
     const host = (i < 0 ? url : url.slice(0, i)).toLowerCase().replace(/\./g, "_");

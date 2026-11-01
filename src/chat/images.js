@@ -6,14 +6,17 @@ const ID = /^[a-zA-Z0-9]{1,32}$/;
 const TOKEN = /\{(?:imgbb|img):([a-zA-Z0-9]{1,32})\}/g;
 export const imageToken = (id) => isDirectImage(id) ? id : 'https://ibb.co/' + id;
 const URL_PATTERN = /(?<![\w@./-])(?:https?:\/\/)?(?:www\.)?ibb\.co\/([a-zA-Z0-9]{1,32})\/?(?![a-zA-Z0-9/_-]|\.[a-zA-Z0-9])(?:[?#][^\s<>"']*)?/gi;
-const IMAGE_PATTERN = new RegExp(TOKEN.source + '|' + URL_PATTERN.source + '|\\[ref\\]\\{(?:www_)?ibb_co/([a-zA-Z0-9]{1,32})\\}|(https://i\\.ibb\\.co/[a-zA-Z0-9_-]+/[^\\s<>"\\\']+)', 'gi');
+const IMAGE_PATTERN = new RegExp(TOKEN.source + '|' + URL_PATTERN.source + '|\\[ref\\]\\{(?:www_)?ibb_co/([a-zA-Z0-9]{1,32})\\}|(https://i\\.ibb\\.co/[a-zA-Z0-9_-]+/[^\\s<>"\\\']+)|\\[ref\\]\\{(i_ibb_co/[a-zA-Z0-9_-]+/[^\\s{}]+)\\}', 'gi');
 function isDirectImage(value) {
     try {
         const url = new URL(value);
         return url.protocol === 'https:' && url.hostname === 'i.ibb.co' && /^\/[a-zA-Z0-9_-]+\/[^/]+/.test(url.pathname);
     } catch { return false; }
 }
-function matchId(match) { return match[1] || match[2] || match[3] || match[4]?.replace(/[.,!?;:)]+$/, ''); }
+function directRefUrl(body) { return 'https://' + body.replace(/^i_ibb_co\//i, 'i.ibb.co/').replace(/%2E/gi, '.'); }
+function matchId(match) {
+    return match[1] || match[2] || match[3] || match[4]?.replace(/[.,!?;:)]+$/, '') || (match[5] && directRefUrl(match[5]));
+}
 export const imagePrefs = () => {
     const p = store.get('t7Images') || {};
     return { mode: ['off', 'link', 'image'].includes(p.mode) ? p.mode : 'image', button: p.button === true,
@@ -33,7 +36,7 @@ export function imageId(value) {
         return ['http:', 'https:'].includes(url.protocol) && ['ibb.co', 'www.ibb.co'].includes(url.hostname) && ID.test(id) ? id : null;
     } catch { return null; }
 }
-export const encodeImageLinks = (text) => text.replace(IMAGE_PATTERN, (raw, legacy, url, ref, direct) => direct || imageToken(legacy || url || ref));
+export const encodeImageLinks = (text) => text.replace(IMAGE_PATTERN, (raw, legacy, url, ref, direct, directRef) => direct || (directRef ? directRefUrl(directRef) : imageToken(legacy || url || ref)));
 export const imageIds = (text) => [...new Set([...text.matchAll(IMAGE_PATTERN)].map(matchId))];
 export function savedImages(key) {
     const ids = store.get('t7Images:' + key);

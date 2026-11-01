@@ -1,6 +1,36 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveImage, imageToken, imageId, imageIds, encodeImageLinks } from '../src/chat/images.js';
+import { sendWithLinks } from '../src/chat/links.js';
+
+test('enabled link encoding also covers imgBB pages and direct GIF links', async (t) => {
+    const storage = new Map([['t7LinkEncoding', true]]);
+    const originals = { get: globalThis.GM_getValue, set: globalThis.GM_setValue, document: globalThis.document };
+    globalThis.GM_getValue = (key) => storage.get(key);
+    globalThis.GM_setValue = (key, value) => storage.set(key, value);
+    globalThis.document = { dispatchEvent() {} };
+    t.after(() => {
+        globalThis.GM_getValue = originals.get;
+        globalThis.GM_setValue = originals.set;
+        globalThis.document = originals.document;
+    });
+    let submitted;
+    const call = async (_path, body) => { submitted = body; return { ok: true }; };
+    await sendWithLinks(call, '/api/chat/say', { text: 'https://ibb.co/Ab123', room: 1 });
+    assert.deepEqual(submitted, { text: '[ref]{ibb_co/Ab123}', room: 1 });
+    assert.deepEqual(imageIds(submitted.text), ['Ab123']);
+    const direct = 'https://i.ibb.co/Ab123/original.gif';
+    await sendWithLinks(call, '/api/chat/say', { text: direct });
+    assert.equal(submitted.text, '[ref]{i_ibb_co/Ab123/original%2Egif}');
+    assert.deepEqual(imageIds(submitted.text), [direct]);
+    assert.equal(encodeImageLinks(submitted.text), direct);
+    assert(storage.get('t7Images:recent').includes(direct));
+    await sendWithLinks(call, '/api/chat/say', { text: '{imgbb:Legacy1}' });
+    assert.equal(submitted.text, '[ref]{ibb_co/Legacy1}');
+    storage.set('t7LinkEncoding', false);
+    await sendWithLinks(call, '/api/chat/say', { text: 'https://ibb.co/Ab123' });
+    assert.equal(submitted.text, 'https://ibb.co/Ab123');
+});
 
 test('imgBB uses plain links and accepts legacy messages', () => {
     assert.equal(imageToken('Ab123'), 'https://ibb.co/Ab123');
